@@ -10,7 +10,6 @@ import java.util.List;
 public class UserController {
     @Autowired
     private UserRepository userRepository;
-
     @GetMapping
     public List<User> getAll() {
         return userRepository.findAll();
