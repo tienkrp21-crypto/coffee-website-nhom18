@@ -10,6 +10,7 @@ import java.util.List;
 public class UserController {
     @Autowired
     private UserRepository userRepository;
+
     @GetMapping
     public List<User> getAll() {
         return userRepository.findAll();
@@ -27,17 +28,15 @@ public class UserController {
 
     @PutMapping("/{id}")
     public User updateUser(@PathVariable Integer id, @RequestBody User userDetails) {
-        // Sửa Long thành Integer ở đây cho khớp
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy User với id: " + id));
+                .orElseThrow(() -> new RuntimeException("Not found: " + id));
         user.setName(userDetails.getName());
         return userRepository.save(user);
     }
 
     @DeleteMapping("/{id}")
     public String deleteUser(@PathVariable Integer id) {
-        // Sửa Long thành Integer ở đây và xóa chữ tiếng Việt lạ
         userRepository.deleteById(id);
-        return "Đã xóa thành công user có id: " + id;
+        return "Deleted: " + id;
     }
 }
