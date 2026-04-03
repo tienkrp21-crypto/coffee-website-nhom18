@@ -1,4 +1,4 @@
-package com.nhom18.coffee;
+package com.nhom18.coffee.QLUser;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

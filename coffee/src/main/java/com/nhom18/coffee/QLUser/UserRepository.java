@@ -1,4 +1,4 @@
-package com.nhom18.coffee;
+package com.nhom18.coffee.QLUser;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

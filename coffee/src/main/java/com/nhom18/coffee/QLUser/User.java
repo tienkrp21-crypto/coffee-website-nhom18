@@ -1,4 +1,4 @@
-package com.nhom18.coffee;
+package com.nhom18.coffee.QLUser;
 
 import jakarta.persistence.*;
 import java.sql.Timestamp;
