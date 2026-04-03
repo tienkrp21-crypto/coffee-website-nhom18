@@ -2,7 +2,9 @@ package com.nhom18.coffee.QLUser;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/users")
@@ -12,6 +14,7 @@ public class UserController {
     @Autowired
     private UserRepository userRepository;
 
+    // --- CÁC HÀM CŨ CỦA BẠN (GIỮ NGUYÊN) ---
     @GetMapping
     public List<User> getAll() {
         return userRepository.findAll();
@@ -22,22 +25,15 @@ public class UserController {
         return userRepository.findById(id).orElse(null);
     }
 
-    @PostMapping
-    public User create(@RequestBody User user) {
-        return userRepository.save(user);
-    }
-
     @PutMapping("/{id}")
     public User update(@PathVariable Integer id, @RequestBody User userDetails) {
         return userRepository.findById(id).map(user -> {
-            // Cập nhật các trường mới
             user.setFullName(userDetails.getFullName());
             user.setEmail(userDetails.getEmail());
             user.setPhone(userDetails.getPhone());
             user.setPassword(userDetails.getPassword());
             user.setStatus(userDetails.getStatus());
             user.setRoleId(userDetails.getRoleId());
-
             return userRepository.save(user);
         }).orElse(null);
     }
@@ -47,5 +43,45 @@ public class UserController {
         if(userRepository.existsById(id)) {
             userRepository.deleteById(id);
         }
+    }
+
+    // ==========================================
+    // --- TASK 1: CHỨC NĂNG ĐĂNG KÝ & ĐĂNG NHẬP ---
+    // ==========================================
+
+    @PostMapping("/register")
+    public String register(@RequestBody User user) {
+        // 1. Kiểm tra xem email đã tồn tại trong Database chưa
+        Optional<User> existingUser = userRepository.findByEmail(user.getEmail());
+        if (existingUser.isPresent()) {
+            return "Thất bại: Email này đã được đăng ký!";
+        }
+
+        // 2. Gán giá trị mặc định cho User mới (nếu Frontend không gửi lên)
+        if (user.getStatus() == null) {
+            user.setStatus(1); // 1 = Tài khoản đang hoạt động
+        }
+        if (user.getRoleId() == null) {
+            user.setRoleId(2); // Giả sử 2 là quyền Khách hàng (Customer)
+        }
+
+        // 3. Lưu vào Database
+        userRepository.save(user);
+        return "Thành công: Đăng ký tài khoản hoàn tất!";
+    }
+
+    @PostMapping("/login")
+    public String login(@RequestBody User loginData) {
+        // 1. Tìm user theo email
+        Optional<User> user = userRepository.findByEmail(loginData.getEmail());
+
+        // 2. Kiểm tra nếu tìm thấy user VÀ mật khẩu nhập vào khớp với DB
+        if (user.isPresent() && user.get().getPassword().equals(loginData.getPassword())) {
+            // (Hiện tại trả về chữ, sau này sẽ nâng cấp lên trả về mã JWT theo yêu cầu của Lead)
+            return "Thành công: Đăng nhập hợp lệ!";
+        }
+
+        // 3. Nếu sai email hoặc mật khẩu
+        return "Thất bại: Sai email hoặc mật khẩu!";
     }
 }
