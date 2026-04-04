@@ -1,4 +1,4 @@
-package com.nhom18.coffee.QLcategories;
+package com.nhom18.coffee.entity;
 
 import jakarta.persistence.*;
 

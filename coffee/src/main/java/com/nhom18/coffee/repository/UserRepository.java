@@ -1,8 +1,11 @@
-package com.nhom18.coffee.QLUser;
+package com.nhom18.coffee.repository;
+
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import java.util.Optional;
+
+import com.nhom18.coffee.entity.User;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Integer> {
