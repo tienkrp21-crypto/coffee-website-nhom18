@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
+import { CartProvider } from './context/CartContext'; 
 
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -14,36 +15,37 @@ import PaymentResult from './pages/PaymentResult';
 import Profile from './pages/Profile';
 import OrderHistory from './pages/OrderHistory';
 
-// Giữ lại các trang của Backend nhưng không để trùng lặp import
 import CoffeeShop from "./CoffeeShop";
 import Users from "./User";
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Nhóm các trang dùng chung Header/Footer */}
-        <Route path="/" element={<MainLayout />}>
-          <Route index element={<Home />} />
-          <Route path="products" element={<ProductList />} />
-          <Route path="product/:id" element={<ProductDetail />} />
-          <Route path="cart" element={<Cart />} />
-          <Route path="checkout" element={<Checkout />} />
-          <Route path="payment-result" element={<PaymentResult />} />
-          <Route path="profile" element={<Profile />} />
-          <Route path="orders" element={<OrderHistory />} />
-        </Route>
+    <CartProvider> 
+      <BrowserRouter>
+        <Routes>
+          {/* Nhóm các trang dùng chung Header/Footer */}
+          <Route path="/" element={<MainLayout />}>
+            <Route index element={<Home />} />
+            <Route path="products" element={<ProductList />} />
+            <Route path="product/:id" element={<ProductDetail />} />
+            <Route path="cart" element={<Cart />} />
+            <Route path="checkout" element={<Checkout />} />
+            <Route path="payment-result" element={<PaymentResult />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="orders" element={<OrderHistory />} />
+          </Route>
 
-        {/* Các trang không dùng chung Header */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        
-        {/* Các trang bổ sung từ Backend (đổi path để không trùng với Home) */}
-        <Route path="/coffee-shop-info" element={<CoffeeShop />} />
-        <Route path="/users-list" element={<Users />} />
-      </Routes>
-    </BrowserRouter>
+          {/* Các trang không dùng chung Header */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          
+          <Route path="/coffee-shop-info" element={<CoffeeShop />} />
+          <Route path="/users-list" element={<Users />} />
+        </Routes>
+      </BrowserRouter>
+    </CartProvider>
   );
 }
+
 export default App;
