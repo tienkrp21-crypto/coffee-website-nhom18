@@ -1,0 +1,48 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Oswald:wght@500;600;700&family=Pacifico&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #E88F2A;    
+  --color-secondary: #FAF3EB;  
+  --color-dark: #2B2825;       
+  --color-light: #FFFFFF;     
+  --font-sans: 'Open Sans', sans-serif;
+  --font-heading: 'Oswald', sans-serif;
+  --font-cursive: 'Pacifico', cursive;
+}
+@layer utilities {
+  .border-inner {
+    position: relative;
+    z-index: 1;
+  }
+  .border-inner::before {
+    position: absolute;
+    content: "";
+    top: 10px; right: 10px; bottom: 10px; left: 10px;
+    border: 1px solid var(--color-light);
+    z-index: -1;
+    pointer-events: none;
+  }
+  .border-inner-dark::before {
+    border-color: rgba(43, 40, 37, 0.2);
+  }
+}
+.section-title {
+  position: relative;
+}
+.section-title::before {
+  position: absolute;
+  content: "";
+  width: 60px; height: 10px;
+  left: 50%; bottom: 0;
+  margin-left: -30px;
+  background: var(--color-primary);
+}
+.section-title::after {
+  position: absolute;
+  content: "";
+  width: 180px; height: 2px;
+  left: 50%; bottom: 4px;
+  margin-left: -90px;
+  background: var(--color-primary);
+}
