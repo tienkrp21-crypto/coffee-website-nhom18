@@ -5,22 +5,8 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  ShoppingCart,
-  X,
-  Coffee,
-  Plus,
-  Minus,
-  Trash2,
-  ChevronRight,
-  Heart,
-  Star,
-  Clock,
-  MapPin,
-  Instagram,
-  Facebook,
-  Twitter,
-} from "lucide-react";
+// Đã xóa 3 icon lỗi và thêm Globe, Share2 làm icon thay thế
+import { ShoppingCart, X, Coffee, Plus, Minus, Trash2, ChevronRight, Heart, Star, Clock, MapPin, Globe, Share2 } from "lucide-react";
 
 // Data - Expanded from your original list
 const PRODUCTS = [
@@ -447,7 +433,8 @@ export default function CoffeeShop() {
                 chuyện thú vị bên tách cà phê nồng nàn.
               </p>
               <div className="flex gap-4">
-                {[Instagram, Facebook, Twitter].map((Icon, i) => (
+                {/* Đã thay thế icon Facebook/Instagram/Twitter bằng Globe và Share2 */}
+                {[Globe, Share2, Coffee].map((Icon, i) => (
                   <a
                     key={i}
                     href="#"

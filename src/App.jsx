@@ -1,9 +1,7 @@
-<<<<<<< HEAD
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
 
-// Import tất cả 11 trang
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -15,17 +13,15 @@ import Checkout from './pages/Checkout';
 import PaymentResult from './pages/PaymentResult';
 import Profile from './pages/Profile';
 import OrderHistory from './pages/OrderHistory';
-=======
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+// Giữ lại các trang của Backend nhưng không để trùng lặp import
 import CoffeeShop from "./CoffeeShop";
 import Users from "./User";
->>>>>>> f3298702f0e56e585dd2c0c106e846685015f51d
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-<<<<<<< HEAD
         {/* Nhóm các trang dùng chung Header/Footer */}
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Home />} />
@@ -38,21 +34,16 @@ function App() {
           <Route path="orders" element={<OrderHistory />} />
         </Route>
 
-        {/* Các trang không dùng chung Header (như Login, Register) */}
+        {/* Các trang không dùng chung Header */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-=======
-        <Route path="/" element={<CoffeeShop />} />
-        <Route path="/users" element={<Users />} />
->>>>>>> f3298702f0e56e585dd2c0c106e846685015f51d
+        
+        {/* Các trang bổ sung từ Backend (đổi path để không trùng với Home) */}
+        <Route path="/coffee-shop-info" element={<CoffeeShop />} />
+        <Route path="/users-list" element={<Users />} />
       </Routes>
     </BrowserRouter>
   );
 }
-
-<<<<<<< HEAD
 export default App;
-=======
-export default App;
->>>>>>> f3298702f0e56e585dd2c0c106e846685015f51d
