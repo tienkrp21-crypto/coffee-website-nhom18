@@ -5,83 +5,82 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/users")
-@CrossOrigin("*")
+@CrossOrigin("*") // Mở cửa cho Frontend gọi API không bị lỗi CORS
 public class UserController {
 
     @Autowired
     private UserRepository userRepository;
 
-    // --- CÁC HÀM CŨ CỦA BẠN (GIỮ NGUYÊN) ---
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
+
+    @Autowired
+    private EmailService emailService;
+
+    // 1. API LẤY DANH SÁCH NGƯỜI DÙNG (Dành cho Admin)
     @GetMapping
-    public List<User> getAll() {
+    public List<User> getAllUsers() {
         return userRepository.findAll();
     }
 
-    @GetMapping("/{id}")
-    public User getOne(@PathVariable Integer id) {
-        return userRepository.findById(id).orElse(null);
-    }
-
-    @PutMapping("/{id}")
-    public User update(@PathVariable Integer id, @RequestBody User userDetails) {
-        return userRepository.findById(id).map(user -> {
-            user.setFullName(userDetails.getFullName());
-            user.setEmail(userDetails.getEmail());
-            user.setPhone(userDetails.getPhone());
-            user.setPassword(userDetails.getPassword());
-            user.setStatus(userDetails.getStatus());
-            user.setRoleId(userDetails.getRoleId());
-            return userRepository.save(user);
-        }).orElse(null);
-    }
-
-    @DeleteMapping("/{id}")
-    public void delete(@PathVariable Integer id) {
-        if(userRepository.existsById(id)) {
-            userRepository.deleteById(id);
-        }
-    }
-
-    // ==========================================
-    // --- TASK 1: CHỨC NĂNG ĐĂNG KÝ & ĐĂNG NHẬP ---
-    // ==========================================
-
+    // 2. API ĐĂNG KÝ TÀI KHOẢN MỚI
     @PostMapping("/register")
-    public String register(@RequestBody User user) {
-        // 1. Kiểm tra xem email đã tồn tại trong Database chưa
-        Optional<User> existingUser = userRepository.findByEmail(user.getEmail());
+    public String register(@RequestBody User newUser) {
+        // Kiểm tra xem email đã tồn tại chưa
+        Optional<User> existingUser = userRepository.findByEmail(newUser.getEmail());
         if (existingUser.isPresent()) {
             return "Thất bại: Email này đã được đăng ký!";
         }
 
-        // 2. Gán giá trị mặc định cho User mới (nếu Frontend không gửi lên)
-        if (user.getStatus() == null) {
-            user.setStatus(1); // 1 = Tài khoản đang hoạt động
-        }
-        if (user.getRoleId() == null) {
-            user.setRoleId(2); // Giả sử 2 là quyền Khách hàng (Customer)
-        }
+        // Mặc định khách hàng mới đăng ký sẽ có role_id = 2 (CUSTOMER) và status = 1 (Hoạt động)
+        newUser.setRoleId(2);
+        newUser.setStatus(1);
 
-        // 3. Lưu vào Database
-        userRepository.save(user);
+        userRepository.save(newUser);
         return "Thành công: Đăng ký tài khoản hoàn tất!";
     }
 
+    // 3. API ĐĂNG NHẬP (TRẢ VỀ TOKEN JWT)
     @PostMapping("/login")
     public String login(@RequestBody User loginData) {
-        // 1. Tìm user theo email
         Optional<User> user = userRepository.findByEmail(loginData.getEmail());
 
-        // 2. Kiểm tra nếu tìm thấy user VÀ mật khẩu nhập vào khớp với DB
+        // Kiểm tra xem có user không và mật khẩu có khớp không
         if (user.isPresent() && user.get().getPassword().equals(loginData.getPassword())) {
-            // (Hiện tại trả về chữ, sau này sẽ nâng cấp lên trả về mã JWT theo yêu cầu của Lead)
-            return "Thành công: Đăng nhập hợp lệ!";
+
+            // Nếu đúng, tạo ra một mã JWT xịn xò và trả về cho Frontend
+            String token = jwtTokenUtil.generateToken(user.get().getEmail());
+            return token;
         }
 
-        // 3. Nếu sai email hoặc mật khẩu
         return "Thất bại: Sai email hoặc mật khẩu!";
+    }
+
+    // 4. API QUÊN MẬT KHẨU (GỬI MAIL CẤP LẠI)
+    @PostMapping("/forgot-password")
+    public String forgotPassword(@RequestParam String email) {
+        Optional<User> userOptional = userRepository.findByEmail(email);
+
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+
+            // Tạo 1 mật khẩu ngẫu nhiên gồm 6 ký tự
+            String newPassword = UUID.randomUUID().toString().substring(0, 6);
+
+            // Lưu mật khẩu mới vào Database
+            user.setPassword(newPassword);
+            userRepository.save(user);
+
+            // Gọi anh "Bưu tá" đi giao thư chứa mật khẩu mới
+            emailService.sendNewPasswordEmail(email, newPassword);
+
+            return "Thành công: Đã gửi mật khẩu mới qua Email của bạn!";
+        }
+
+        return "Thất bại: Không tìm thấy tài khoản với Email này!";
     }
 }
