@@ -62,7 +62,7 @@ public class UserController {
 
     // 4. API QUÊN MẬT KHẨU (GỬI MAIL CẤP LẠI)
     @PostMapping("/forgot-password")
-    public String forgotPassword(@RequestParam String email) {
+    public org.springframework.http.ResponseEntity<String> forgotPassword(@RequestParam String email) {
         Optional<User> userOptional = userRepository.findByEmail(email);
 
         if (userOptional.isPresent()) {
@@ -78,9 +78,11 @@ public class UserController {
             // Gọi anh "Bưu tá" đi giao thư chứa mật khẩu mới
             emailService.sendNewPasswordEmail(email, newPassword);
 
-            return "Thành công: Đã gửi mật khẩu mới qua Email của bạn!";
+            // Trả về mã 200 (OK)
+            return org.springframework.http.ResponseEntity.ok("Thành công: Đã gửi mật khẩu mới qua Email của bạn!");
         }
 
-        return "Thất bại: Không tìm thấy tài khoản với Email này!";
+        // Trả về mã 400 (Bad Request) để báo lỗi cho Frontend
+        return org.springframework.http.ResponseEntity.badRequest().body("Thất bại: Không tìm thấy tài khoản với Email này!");
     }
 }
