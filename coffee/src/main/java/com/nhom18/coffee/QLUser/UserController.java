@@ -60,46 +60,59 @@ public class UserController {
         return "Thất bại: Sai email hoặc mật khẩu!";
     }
 
-    // 4. API QUÊN MẬT KHẨU (Bản nâng cấp: Gửi Link)
-    @PostMapping("/forgot-password")
-    public org.springframework.http.ResponseEntity<String> forgotPassword(@RequestParam String email) {
+    // API 1: Bấm nút "Lấy mã" -> Trả về một cái Token (chứa OTP) cho Frontend giữ
+    @PostMapping("/forgot-password/send-otp")
+    public org.springframework.http.ResponseEntity<String> sendOtp(@RequestParam String email) {
         Optional<User> userOptional = userRepository.findByEmail(email);
 
         if (userOptional.isPresent()) {
-            // Tạo 1 thẻ VIP sống 15 phút
-            String resetToken = jwtTokenUtil.generateResetToken(email);
+            // Random ra 6 số ngẫu nhiên
+            String otpCode = String.format("%06d", new java.util.Random().nextInt(999999));
 
-            // Ép cái thẻ VIP đó vào đuôi đường link trang web của Frontend
-            String resetLink = "https://coffee-website-nhom18.vercel.app/reset-password?token=" + resetToken;
+            // Gửi 6 số đó vào mail cho khách
+            emailService.sendOtpEmail(email, otpCode);
 
-            // Gửi mail chứa link
-            emailService.sendResetPasswordEmail(email, resetLink);
+            // Gói 6 số đó vào 1 cái Token, ném về cho Frontend cất giữ
+            String token = jwtTokenUtil.generateOtpToken(email, otpCode);
 
-            return org.springframework.http.ResponseEntity.ok("Thành công: Đã gửi link đặt lại mật khẩu qua Email!");
+            // Trả về Token cho Frontend (Dặn FE phải lưu cái này lại)
+            return org.springframework.http.ResponseEntity.ok(token);
         }
 
-        return org.springframework.http.ResponseEntity.badRequest().body("Thất bại: Không tìm thấy tài khoản với Email này!");
+        return org.springframework.http.ResponseEntity.badRequest().body("Thất bại: Email chưa được đăng ký!");
     }
 
-    // 5. API ĐẶT LẠI MẬT KHẨU (API MỚI - Frontend sẽ gọi hàm này khi khách gõ pass mới)
-    @PostMapping("/reset-password")
-    public org.springframework.http.ResponseEntity<String> resetPassword(@RequestParam String token, @RequestParam String newPassword) {
+    // API 2: Bấm nút "Xác nhận đổi MK" -> Frontend gửi cả Mã OTP khách gõ + Cái Token lúc nãy lên
+    @PostMapping("/forgot-password/confirm-otp")
+    public org.springframework.http.ResponseEntity<String> confirmOtp(
+            @RequestParam String token,
+            @RequestParam String userInputOtp,
+            @RequestParam String newPassword) {
         try {
-            // Giải mã thẻ VIP xem của ai. Nếu token hết 15 phút, nó sẽ báo lỗi văng xuống block catch!
-            String email = jwtTokenUtil.extractEmailFromToken(token);
-            Optional<User> userOptional = userRepository.findByEmail(email);
+            // Mở khóa Token ra
+            io.jsonwebtoken.Claims claims = jwtTokenUtil.extractAllClaims(token);
+            String email = claims.getSubject();
+            String realOtp = claims.get("otp", String.class); // Lấy mã thật từ trong thẻ
 
+            // So sánh mã khách gõ với mã thật
+            if (!realOtp.equals(userInputOtp)) {
+                return org.springframework.http.ResponseEntity.badRequest().body("Thất bại: Mã OTP không chính xác!");
+            }
+
+            // Nếu đúng -> Lưu mật khẩu mới
+            Optional<User> userOptional = userRepository.findByEmail(email);
             if (userOptional.isPresent()) {
                 User user = userOptional.get();
-                user.setPassword(newPassword); // Cập nhật mật khẩu mới khách vừa gõ
+                user.setPassword(newPassword);
                 userRepository.save(user);
-                return org.springframework.http.ResponseEntity.ok("Thành công: Đặt lại mật khẩu hoàn tất!");
+                return org.springframework.http.ResponseEntity.ok("Thành công: Đã đổi mật khẩu!");
             }
-            return org.springframework.http.ResponseEntity.badRequest().body("Thất bại: Không tìm thấy người dùng!");
+            return org.springframework.http.ResponseEntity.badRequest().body("Lỗi hệ thống: Không tìm thấy user!");
 
+        } catch (io.jsonwebtoken.ExpiredJwtException e) {
+            return org.springframework.http.ResponseEntity.badRequest().body("Thất bại: Mã OTP đã hết hạn 5 phút. Vui lòng lấy mã mới!");
         } catch (Exception e) {
-            // Bắt lỗi nếu Token bị sửa bậy bạ hoặc đã quá 15 phút
-            return org.springframework.http.ResponseEntity.badRequest().body("Thất bại: Đường link đã hết hạn hoặc không hợp lệ! Vui lòng gửi lại yêu cầu.");
+            return org.springframework.http.ResponseEntity.badRequest().body("Thất bại: Dữ liệu không hợp lệ!");
         }
     }
 }

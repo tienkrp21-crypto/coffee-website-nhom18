@@ -11,12 +11,12 @@ public class EmailService {
     @Autowired
     private JavaMailSender mailSender;
 
-    public void sendResetPasswordEmail(String toEmail, String resetLink) {
-        SimpleMailMessage message = new SimpleMailMessage();
+    public void sendOtpEmail(String toEmail, String otpCode) {
+        org.springframework.mail.SimpleMailMessage message = new org.springframework.mail.SimpleMailMessage();
         message.setTo(toEmail);
-        message.setSubject("Yêu cầu đặt lại mật khẩu - Xutore");
-        message.setText("Chào bạn,\n\nBạn đã yêu cầu đặt lại mật khẩu. Vui lòng click vào đường link dưới đây để tạo mật khẩu mới (Link chỉ có hiệu lực trong 15 phút):\n\n"
-                + resetLink + "\n\nNếu bạn không yêu cầu, vui lòng bỏ qua email này.");
+        message.setSubject("Mã xác nhận Đặt lại mật khẩu - Xutore");
+        message.setText("Chào bạn,\n\nMã xác nhận (OTP) để đặt lại mật khẩu của bạn là: "
+                + otpCode + "\n\nMã này chỉ có hiệu lực trong 5 phút. Vui lòng không chia sẻ mã này cho bất kỳ ai.");
 
         mailSender.send(message);
     }

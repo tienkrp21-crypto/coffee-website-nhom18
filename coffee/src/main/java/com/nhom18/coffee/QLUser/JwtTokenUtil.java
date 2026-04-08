@@ -26,19 +26,20 @@ public class JwtTokenUtil {
                 .signWith(key)
                 .compact();
     }
-    // Tạo mã xác thực riêng cho Quên mật khẩu (Chỉ sống được 15 phút)
-    public String generateResetToken(String email) {
-        long resetExpirationTime = 15 * 60 * 1000; // 15 phút
+    // Tạo Token giấu mã OTP vào trong (Sống 5 phút)
+    public String generateOtpToken(String email, String otpCode) {
+        long otpExpirationTime = 5 * 60 * 1000; // 5 phút
         return Jwts.builder()
                 .setSubject(email)
+                .claim("otp", otpCode) // Giấu 6 số OTP vào đây
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + resetExpirationTime))
+                .setExpiration(new Date(System.currentTimeMillis() + otpExpirationTime))
                 .signWith(key)
                 .compact();
     }
 
-    // Hàm mở khóa mã xác thực để lấy lại Email
-    public String extractEmailFromToken(String token) {
-        return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody().getSubject();
+    // Lấy thông tin từ Token ra để kiểm tra
+    public io.jsonwebtoken.Claims extractAllClaims(String token) {
+        return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
     }
 }
