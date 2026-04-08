@@ -18,7 +18,7 @@ const ProductList = () => {
 
   // --- KHO CHỨA DỮ LIỆU TỪ API ---
   const [apiCategories, setApiCategories] = useState([]);
-  const [apiProducts, setApiProducts] = useState([]); // Đã hết bị gạch vàng nhé!
+  const [apiProducts, setApiProducts] = useState([]); 
 
   // --- GỌI API LẤY CẢ DANH MỤC & SẢN PHẨM ---
   useEffect(() => {
