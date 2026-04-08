@@ -61,7 +61,6 @@ public class UserController {
     }
 
     // API 1: Bấm nút "Lấy mã" -> Trả về một cái Token (chứa OTP) cho Frontend giữ
-    @CrossOrigin("*")
     @PostMapping("/forgot-password/send-otp")
     public org.springframework.http.ResponseEntity<String> sendOtp(@RequestParam String email) {
         Optional<User> userOptional = userRepository.findByEmail(email);
@@ -84,7 +83,6 @@ public class UserController {
     }
 
     // API 2: Bấm nút "Xác nhận đổi MK" -> Frontend gửi cả Mã OTP khách gõ + Cái Token lúc nãy lên
-    @CrossOrigin("*")
     @PostMapping("/forgot-password/confirm-otp")
     public org.springframework.http.ResponseEntity<String> confirmOtp(
             @RequestParam String token,
