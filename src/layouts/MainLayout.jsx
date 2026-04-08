@@ -28,12 +28,10 @@ const MainLayout = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
-
       const result = await response.text();
-
       if (response.ok) {
         localStorage.setItem('token', result);
-        alert('Chào mừng bạn quay trở lại! Đăng nhập thành công.'); // Thông báo thành công
+        alert('Đăng nhập thành công!');
         setIsLoginOpen(false); 
         window.location.reload(); 
       } else {
@@ -73,7 +71,6 @@ const MainLayout = () => {
           </nav>
 
           <div className="flex items-center gap-8">
-            {/* Nút Tài khoản/Cá nhân với màu vàng khi active */}
             <button 
               type="button"
               onClick={() => token ? navigate('/profile') : setIsLoginOpen(true)}
@@ -106,59 +103,36 @@ const MainLayout = () => {
               onClick={() => setIsLoginOpen(false)}
               className="absolute inset-0 bg-black/80 backdrop-blur-md"
             ></motion.div>
-
             <motion.div 
               initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }}
               className="bg-white w-full max-w-md relative shadow-2xl overflow-hidden"
             >
-              <button 
-                onClick={() => setIsLoginOpen(false)}
-                className="absolute top-6 right-6 text-gray-400 hover:text-primary transition-all"
-              >
+              <button onClick={() => setIsLoginOpen(false)} className="absolute top-6 right-6 text-gray-400 hover:text-primary transition-all">
                 <X size={24} />
               </button>
-
               <div className="p-12">
                 <div className="text-center mb-10">
                   <h2 className="font-serif text-4xl text-dark mb-2 uppercase italic">Đăng Nhập</h2>
                   <div className="w-16 h-0.5 bg-primary mx-auto"></div>
                 </div>
-
                 <form onSubmit={handleLogin} className="space-y-6">
                   <div>
                     <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 tracking-widest">Địa chỉ Email</label>
-                    <input 
-                      type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-                      placeholder="email@example.com"
-                      className="w-full px-5 py-4 border border-gray-100 focus:border-primary outline-none transition bg-gray-50 font-serif"
-                    />
+                    <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@example.com" className="w-full px-5 py-4 border border-gray-100 focus:border-primary outline-none transition bg-gray-50 font-serif" />
                   </div>
                   <div>
                     <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 tracking-widest">Mật khẩu</label>
-                    <input 
-                      type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="w-full px-5 py-4 border border-gray-100 focus:border-primary outline-none transition bg-gray-50"
-                    />
+                    <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="w-full px-5 py-4 border border-gray-100 focus:border-primary outline-none transition bg-gray-50" />
                   </div>
-
                   <div className="text-right">
                     <Link to="/forgot-password" onClick={() => setIsLoginOpen(false)} className="text-[10px] text-primary font-black uppercase tracking-widest hover:underline">Quên mật khẩu?</Link>
                   </div>
-
-                  <button 
-                    type="submit" disabled={loading}
-                    className="w-full bg-dark text-white py-5 font-black uppercase text-xs tracking-[0.3em] hover:bg-primary transition-all flex items-center justify-center gap-3 shadow-lg"
-                  >
+                  <button type="submit" disabled={loading} className="w-full bg-dark text-white py-5 font-black uppercase text-xs tracking-[0.3em] hover:bg-primary transition-all flex items-center justify-center gap-3 shadow-lg">
                     {loading ? <Loader2 className="animate-spin" /> : "Vào cửa hàng"}
                   </button>
                 </form>
-
                 <div className="mt-10 pt-8 border-t border-gray-100 text-center">
-                  <p className="text-gray-400 text-xs font-medium">
-                    Bạn là người mới?{' '}
-                    <Link to="/register" onClick={() => setIsLoginOpen(false)} className="text-primary font-black uppercase tracking-widest hover:underline ml-2">Tạo tài khoản</Link>
-                  </p>
+                  <p className="text-gray-400 text-xs font-medium">Bạn là người mới? <Link to="/register" onClick={() => setIsLoginOpen(false)} className="text-primary font-black uppercase tracking-widest hover:underline ml-2">Tạo tài khoản</Link></p>
                 </div>
               </div>
             </motion.div>
@@ -166,22 +140,63 @@ const MainLayout = () => {
         )}
       </AnimatePresence>
 
-      <main className="flex-grow bg-white"><Outlet /></main>
+      <main className="flex-grow bg-white">
+        <Outlet />
+      </main>
 
-      {/* 4. FOOTER */}
-      <footer className="bg-dark text-secondary pt-20 pb-10 border-t-4 border-primary mt-auto" style={{ backgroundImage: 'linear-gradient(rgba(43, 40, 37, .97), rgba(43, 40, 37, .97)), url("https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=1920")', backgroundSize: 'cover' }}>
+      {/* 4. FOOTER (KHÔI PHỤC BẢN GỐC 4 CỘT) */}
+      <footer 
+        className="bg-dark text-secondary pt-20 pb-10 border-t-4 border-primary mt-auto"
+        style={{
+          backgroundImage: 'linear-gradient(rgba(43, 40, 37, .97), rgba(43, 40, 37, .97)), url("https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=1920")',
+          backgroundSize: 'cover'
+        }}
+      >
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+            
+            {/* Cột 1: Liên hệ */}
             <div>
               <h4 className="text-primary font-serif text-2xl uppercase mb-8 border-b border-gray-800 pb-4">Liên Hệ</h4>
               <ul className="space-y-4 text-gray-400 text-sm">
-                <li className="flex items-start gap-3 leading-relaxed"><MapPin size={18} className="text-primary shrink-0 mt-1" /> Quận 1, TP. Hồ Chí Minh</li>
+                <li className="flex items-start gap-3"><MapPin size={18} className="text-primary shrink-0 mt-1" /> 123 Đường Cà Phê, Quận 1, TP. HCM</li>
                 <li className="flex items-center gap-3"><Phone size={18} className="text-primary shrink-0" /> +012 345 6789</li>
                 <li className="flex items-center gap-3"><Mail size={18} className="text-primary shrink-0" /> info@cafematerial.com</li>
               </ul>
             </div>
-            {/* ...Các cột khác... */}
+
+            {/* Cột 2: Đường dẫn nhanh */}
+            <div>
+              <h4 className="text-primary font-serif text-2xl uppercase mb-8 border-b border-gray-800 pb-4">Liên Kết</h4>
+              <ul className="space-y-3">
+                <li><Link to="/" className="text-gray-400 hover:text-primary transition flex items-center gap-2">▸ Trang chủ</Link></li>
+                <li><Link to="/products" className="text-gray-400 hover:text-primary transition flex items-center gap-2">▸ Menu sản phẩm</Link></li>
+                <li><Link to="/cart" className="text-gray-400 hover:text-primary transition flex items-center gap-2">▸ Giỏ hàng</Link></li>
+              </ul>
+            </div>
+
+            {/* Cột 3: Giờ hoạt động */}
+            <div>
+              <h4 className="text-primary font-serif text-2xl uppercase mb-8 border-b border-gray-800 pb-4">Giờ Mở Cửa</h4>
+              <ul className="space-y-3 text-gray-400 text-sm">
+                <li className="flex justify-between border-b border-gray-800 pb-2"><span>Thứ 2 - Thứ 6:</span> <span>8:00 - 17:00</span></li>
+                <li className="flex justify-between border-b border-gray-800 pb-2"><span>Thứ 7:</span> <span>8:00 - 12:00</span></li>
+                <li className="flex justify-between pb-2"><span>Chủ Nhật:</span> <span className="text-primary font-bold">Nghỉ</span></li>
+              </ul>
+            </div>
+
+            {/* Cột 4: Đăng ký nhận tin */}
+            <div>
+              <h4 className="text-primary font-serif text-2xl uppercase mb-8 border-b border-gray-800 pb-4">Bản Tin</h4>
+              <p className="text-gray-400 mb-6 text-sm">Đăng ký email để nhận ưu đãi mới nhất.</p>
+              <div className="flex border-2 border-primary/30">
+                <input type="text" placeholder="Email của bạn" className="w-full px-4 py-2 bg-white text-dark focus:outline-none" />
+                <button className="bg-primary px-4 py-2 text-dark font-black text-xs hover:bg-white transition">GỬI</button>
+              </div>
+            </div>
+
           </div>
+
           <div className="border-t border-gray-800 pt-8 text-center text-gray-500 text-[10px] font-black uppercase tracking-widest">
             <p>&copy; 2026 <span className="text-primary">CafeMaterial</span>. Crafted with Coffee.</p>
           </div>

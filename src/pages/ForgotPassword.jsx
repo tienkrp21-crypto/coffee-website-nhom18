@@ -1,107 +1,158 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Mail, Lock, ShieldCheck, Loader2, ArrowLeft } from 'lucide-react';
+
+const BASE_URL = 'https://coffee-website-nhom18.onrender.com'; //
 
 const ForgotPassword = () => {
-  // 1. Tạo "bộ nhớ" để lưu email người dùng nhập vào
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [otp, setOtp] = useState('');
+  
+  // MẸO 2: Biến useState ngầm để lưu Token từ Backend gửi về
+  const [otpToken, setOtpToken] = useState(''); 
+  
+  // MẸO 1: Trạng thái đồng hồ đếm ngược
+  const [countdown, setCountdown] = useState(0); 
+  
+  const [loadingSend, setLoadingSend] = useState(false);
+  const [loadingConfirm, setLoadingConfirm] = useState(false);
 
-  // 2. Hàm "Động cơ" xử lý khi bấm nút Gửi
-  const handleSubmit = async (e) => {
-    e.preventDefault(); // Thần chú chống load lại trang!
-    setLoading(true);
+  // Logic chạy đồng hồ đếm ngược
+  useEffect(() => {
+    let timer;
+    if (countdown > 0) {
+      timer = setInterval(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [countdown]);
 
+  // 1. Hàm xử lý Lấy mã OTP
+  const handleGetOtp = async () => {
+    if (!email) return alert("Dũng ơi, nhập Email trước khi lấy mã nhé!");
+    
+    setLoadingSend(true);
     try {
-      // Gọi sang Backend Render của bạn
-      const response = await fetch(
-        `https://coffee-website-nhom18.onrender.com/users/forgot-password?email=${email}`,
-        {
-          method: "POST",
-        },
-      );
-
-      const message = await response.text();
-
+      const response = await fetch(`${BASE_URL}/users/forgot-password/send-otp?email=${email}`, {
+        method: 'POST'
+      });
+      
       if (response.ok) {
-        alert("Thành công! Kiểm tra Email để nhận mật khẩu mới nhé.");
-        navigate("/login"); // Chuyển về trang đăng nhập
+        const data = await response.json();
+        // MẸO 2: Cất Token ẩn vào State ngay khi nhận được
+        setOtpToken(data.token); 
+        
+        // MẸO 1: Khởi động đếm ngược 60 giây và khóa nút
+        setCountdown(60); 
+        alert("Mã OTP đã được gửi! Dũng kiểm tra hòm thư nhé.");
       } else {
-        alert(message || "Có lỗi xảy ra, vui lòng thử lại sau.");
+        alert("Email này chưa đăng ký tài khoản rồi!");
       }
     } catch (error) {
-      console.error("Lỗi:", error);
-      alert("Lỗi kết nối đến máy chủ!");
+      alert("Lỗi kết nối máy chủ rồi Dũng ơi!");
     } finally {
-      setLoading(false);
+      setLoadingSend(false);
+    }
+  };
+
+  // 2. Hàm xử lý Xác nhận đổi mật khẩu
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    if (!otp || !newPassword) return alert("Dũng điền nốt mã OTP và mật khẩu mới nha!");
+    
+    setLoadingConfirm(true);
+    try {
+      const response = await fetch(`${BASE_URL}/users/forgot-password/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email, 
+          newPassword, 
+          otp,
+          token: otpToken // MẸO 2: Đính kèm Token ẩn để Tiến kiểm duyệt
+        }),
+      });
+
+      if (response.ok) {
+        alert("Tuyệt vời! Mật khẩu mới đã sẵn sàng.");
+        navigate('/'); // Về Home để hiện Modal đăng nhập mới
+      } else {
+        alert("Mã OTP bị sai hoặc đã hết hạn rồi Dũng ơi!");
+      }
+    } catch (error) {
+      alert("Lỗi hệ thống khi đổi mật khẩu!");
+    } finally {
+      setLoadingConfirm(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-cream flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <Link to="/">
-            <h1 className="font-serif text-3xl font-bold text-dark tracking-wider">
-              Xutore
-            </h1>
-          </Link>
+    <div className="min-h-screen bg-[#FAF3EB] flex items-center justify-center p-4 font-sans">
+      <div className="bg-white w-full max-w-md shadow-2xl p-10 border-t-4 border-primary">
+        
+        <div className="text-center mb-10">
+          <h2 className="font-serif text-4xl text-dark italic mb-2">Quên Mật Khẩu</h2>
+          <div className="w-16 h-1 bg-primary mx-auto"></div>
         </div>
 
-        {/* Forgot Password Card */}
-        <div className="bg-white border border-gray-200 p-10">
-          <h2 className="font-serif text-3xl text-dark text-center mb-4">
-            Quên mật khẩu
-          </h2>
+        <form onSubmit={handleResetPassword} className="space-y-6">
+          {/* Email */}
+          <div>
+            <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 tracking-widest">Địa chỉ Email</label>
+            <input 
+              type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
+              placeholder="email@example.com"
+              className="w-full px-4 py-3 border border-gray-100 focus:border-primary outline-none transition bg-gray-50 font-serif"
+            />
+          </div>
 
-          <p className="text-gray-600 text-center mb-8 text-sm">
-            Nhập địa chỉ email của bạn và chúng tôi sẽ gửi liên kết đặt lại mật
-            khẩu.
-          </p>
+          {/* Mật khẩu mới */}
+          <div>
+            <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 tracking-widest">Mật khẩu mới</label>
+            <input 
+              type="password" required value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="••••••••"
+              className="w-full px-4 py-3 border border-gray-100 focus:border-primary outline-none transition bg-gray-50"
+            />
+          </div>
 
-          {/* Lắp động cơ handleSubmit vào Form */}
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Địa chỉ Email
-              </label>
-              <input
-                type="email"
-                required
-                value={email} // Gắn giá trị vào bộ nhớ
-                onChange={(e) => setEmail(e.target.value)} // Cập nhật bộ nhớ khi gõ chữ
-                placeholder="email@example.com"
-                className="w-full px-4 py-3 border border-gray-300 focus:outline-none focus:border-dark"
+          {/* OTP & Nút lấy mã */}
+          <div className="flex gap-2 items-end">
+            <div className="flex-grow">
+              <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 tracking-widest">Mã OTP</label>
+              <input 
+                type="text" required value={otp} onChange={(e) => setOtp(e.target.value)}
+                placeholder="6 ký tự"
+                className="w-full px-4 py-3 border border-gray-100 focus:border-primary outline-none transition bg-gray-50"
               />
             </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-dark text-white py-4 rounded-full font-medium tracking-wide hover:bg-dark/90 transition-all disabled:opacity-50"
+            
+            {/* Nút Lấy mã: Bị khóa nếu đang đếm ngược */}
+            <button 
+              type="button" 
+              onClick={handleGetOtp} 
+              disabled={loadingSend || countdown > 0}
+              className={`px-4 py-3.5 text-xs font-bold uppercase transition-all min-w-[100px]
+                ${countdown > 0 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-dark text-white hover:bg-primary'}`}
             >
-              {loading ? "Đang xử lý..." : "Gửi liên kết đặt lại"}
+              {loadingSend ? <Loader2 className="animate-spin mx-auto" size={18} /> : (countdown > 0 ? `${countdown}s` : "Lấy mã")}
             </button>
-          </form>
-
-          <div className="mt-8 text-center">
-            <Link
-              to="/login"
-              className="text-sm text-dark hover:text-dark/70 transition"
-            >
-              ← Quay lại đăng nhập
-            </Link>
           </div>
-        </div>
 
-        {/* Back to Shop */}
-        <div className="text-center mt-6">
-          <Link
-            to="/"
-            className="text-sm text-gray-600 hover:text-dark transition"
+          <button 
+            type="submit" disabled={loadingConfirm}
+            className="w-full bg-dark text-white py-4 font-black uppercase text-xs tracking-[0.3em] hover:bg-primary transition-all flex items-center justify-center gap-3 shadow-lg"
           >
-            ← Quay lại cửa hàng
+            {loadingConfirm ? <Loader2 className="animate-spin" /> : "Xác nhận đổi mật khẩu"}
+          </button>
+        </form>
+
+        <div className="mt-8 text-center border-t pt-6">
+          <Link to="/" className="text-gray-400 hover:text-primary transition-all text-xs font-bold uppercase flex items-center justify-center gap-2">
+            <ArrowLeft size={14} /> Quay về trang chủ
           </Link>
         </div>
       </div>
