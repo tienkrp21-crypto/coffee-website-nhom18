@@ -1,170 +1,97 @@
-import React, { useState } from 'react';
-import { User, Mail, Phone, MapPin, Edit2, Save } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { User, Mail, Phone, Edit2, Save, LogOut } from 'lucide-react';
+import LoadingPage from '../components/LoadingPage'; 
+
+const BASE_URL = 'https://coffee-website-nhom18.onrender.com';
 
 const Profile = () => {
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    const fetchProfile = async () => {
+      try {
+        const response = await fetch(`${BASE_URL}/users/profile`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setUserData(data);
+        }
+      } catch (error) {
+        console.error("Lỗi:", error);
+        // Dữ liệu giả để test giao diện
+        setUserData({ fullName: "Trương Hùng Dũng", email: "dung100504@gmail.com", phone: "09xxxxxxxx" });
+      } finally {
+        // Giả lập loading để thấy trang chuyển mượt mà
+        setTimeout(() => setLoading(false), 1200);
+      }
+    };
+    fetchProfile();
+  }, [navigate]);
+
+  // Hàm xử lý đăng xuất
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    alert('Đăng xuất thành công! Hẹn gặp lại bạn tại CafeMaterial.');
+    navigate('/'); // Quay về trang Home sau khi đăng xuất
+  };
+
+  if (loading) return <LoadingPage />;
 
   return (
-    <div className="py-12">
-      <div className="container mx-auto px-4 lg:px-8 max-w-4xl">
-        <h1 className="font-serif text-4xl text-dark mb-12">
-          Trang cá nhân
-        </h1>
+    <div className="py-20 bg-[#FAF3EB] min-h-screen font-sans text-gray-700">
+      <div className="container mx-auto px-4 max-w-5xl">
+        
+        <div className="flex flex-col md:flex-row justify-between items-center mb-16 gap-4">
+          <h1 className="font-serif text-5xl text-dark tracking-tight">Hồ Sơ Của Tôi</h1>
+          <button 
+            onClick={handleLogout}
+            className="flex items-center gap-2 text-red-500 font-bold text-xs uppercase tracking-widest hover:opacity-70 transition"
+          >
+            <LogOut size={16} /> Đăng xuất
+          </button>
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Profile Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="bg-white border border-gray-200 p-8 text-center">
-              <div className="w-32 h-32 bg-gray-200 rounded-full mx-auto mb-6 flex items-center justify-center">
-                <User size={48} className="text-gray-400" />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+          <div className="lg:col-span-4">
+            <div className="bg-white p-10 text-center shadow-xl border-t-4 border-primary">
+              <div className="w-40 h-40 bg-secondary rounded-full mx-auto mb-8 flex items-center justify-center border-2 border-primary/20 p-2">
+                <div className="w-full h-full bg-gray-100 rounded-full flex items-center justify-center">
+                  <User size={64} className="text-gray-300" />
+                </div>
               </div>
-              <h2 className="font-serif text-2xl text-dark mb-2">
-                Trương Hùng Dũng
-              </h2>
-              <p className="text-gray-600 text-sm mb-6">
-                Thành viên từ 2026
-              </p>
-              <button className="text-dark text-sm hover:text-dark/70 transition">
-                Đổi ảnh đại diện
-              </button>
+              <h2 className="font-serif text-3xl text-dark mb-2">{userData?.fullName}</h2>
+              <p className="text-primary text-[10px] uppercase font-black tracking-[0.2em] mb-8">Khách hàng thân thiết</p>
+              <button className="text-xs font-bold border-b-2 border-dark pb-1 hover:text-primary hover:border-primary transition">CẬP NHẬT ẢNH</button>
             </div>
           </div>
 
-          {/* Profile Information */}
-          <div className="lg:col-span-2">
-            <div className="bg-white border border-gray-200 p-8">
-              <div className="flex justify-between items-center mb-8">
-                <h3 className="font-serif text-2xl text-dark">
-                  Thông tin cá nhân
-                </h3>
+          <div className="lg:col-span-8">
+            <div className="bg-white p-12 shadow-xl relative overflow-hidden">
+              <div className="flex justify-between items-center mb-12">
+                <h3 className="font-serif text-2xl italic text-dark">Chi tiết tài khoản</h3>
                 <button 
                   onClick={() => setIsEditing(!isEditing)}
-                  className="flex items-center gap-2 text-dark hover:text-dark/70 transition"
+                  className="flex items-center gap-2 bg-dark text-white px-6 py-2 hover:bg-primary transition text-xs font-bold uppercase tracking-widest"
                 >
-                  {isEditing ? (
-                    <>
-                      <Save size={18} />
-                      <span className="text-sm font-medium">Lưu</span>
-                    </>
-                  ) : (
-                    <>
-                      <Edit2 size={18} />
-                      <span className="text-sm font-medium">Chỉnh sửa</span>
-                    </>
-                  )}
+                  {isEditing ? <><Save size={16} /> Lưu</> : <><Edit2 size={16} /> Chỉnh sửa</>}
                 </button>
               </div>
 
-              <div className="space-y-6">
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                    <User size={16} />
-                    Họ và tên
-                  </label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      defaultValue="Trương Hùng Dũng"
-                      className="w-full px-4 py-3 border border-gray-300 focus:outline-none focus:border-dark"
-                    />
-                  ) : (
-                    <p className="text-dark">Trương Hùng Dũng</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                    <Mail size={16} />
-                    Địa chỉ Email
-                  </label>
-                  {isEditing ? (
-                    <input
-                      type="email"
-                      defaultValue="dung@example.com"
-                      className="w-full px-4 py-3 border border-gray-300 focus:outline-none focus:border-dark"
-                    />
-                  ) : (
-                    <p className="text-dark">dung@example.com</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                    <Phone size={16} />
-                    Số điện thoại
-                  </label>
-                  {isEditing ? (
-                    <input
-                      type="tel"
-                      defaultValue="090xxxxxxx"
-                      className="w-full px-4 py-3 border border-gray-300 focus:outline-none focus:border-dark"
-                    />
-                  ) : (
-                    <p className="text-dark">090xxxxxxx</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                    <MapPin size={16} />
-                    Địa chỉ
-                  </label>
-                  {isEditing ? (
-                    <textarea
-                      defaultValue="123 Main Street, District 1, Ho Chi Minh City"
-                      rows="3"
-                      className="w-full px-4 py-3 border border-gray-300 focus:outline-none focus:border-dark"
-                    ></textarea>
-                  ) : (
-                    <p className="text-dark">123 Main Street, District 1, Ho Chi Minh City</p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Change Password Section */}
-            <div className="bg-white border border-gray-200 p-8 mt-6">
-              <h3 className="font-serif text-2xl text-dark mb-6">
-                Đổi mật khẩu
-              </h3>
-              
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Mật khẩu hiện tại
-                  </label>
-                  <input
-                    type="password"
-                    placeholder="Nhập mật khẩu hiện tại"
-                    className="w-full px-4 py-3 border border-gray-300 focus:outline-none focus:border-dark"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Mật khẩu mới
-                  </label>
-                  <input
-                    type="password"
-                    placeholder="Nhập mật khẩu mới"
-                    className="w-full px-4 py-3 border border-gray-300 focus:outline-none focus:border-dark"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Xác nhận mật khẩu mới
-                  </label>
-                  <input
-                    type="password"
-                    placeholder="Xác nhận mật khẩu mới"
-                    className="w-full px-4 py-3 border border-gray-300 focus:outline-none focus:border-dark"
-                  />
-                </div>
-
-                <button className="bg-dark text-white px-8 py-3 rounded-full font-medium tracking-wide hover:bg-dark/90 transition-all">
-                  Cập nhật mật khẩu
-                </button>
+              <div className="space-y-10">
+                <ProfileItem icon={<User size={18}/>} label="Họ và tên" value={userData?.fullName} isEditing={isEditing} />
+                <ProfileItem icon={<Mail size={18}/>} label="Địa chỉ Email" value={userData?.email} isEditing={false} />
+                <ProfileItem icon={<Phone size={18}/>} label="Số điện thoại" value={userData?.phone} isEditing={isEditing} />
               </div>
             </div>
           </div>
@@ -173,5 +100,18 @@ const Profile = () => {
     </div>
   );
 };
+
+const ProfileItem = ({ icon, label, value, isEditing }) => (
+  <div className="border-b border-gray-100 pb-4">
+    <label className="flex items-center gap-2 text-[10px] font-black text-gray-400 mb-3 uppercase tracking-widest">
+      {icon} {label}
+    </label>
+    {isEditing ? (
+      <input defaultValue={value} className="w-full px-4 py-2 text-xl font-serif text-dark border-none outline-none focus:ring-0 bg-gray-50 shadow-inner" />
+    ) : (
+      <p className="text-2xl font-serif text-dark">{value || "Chưa cập nhật"}</p>
+    )}
+  </div>
+);
 
 export default Profile;

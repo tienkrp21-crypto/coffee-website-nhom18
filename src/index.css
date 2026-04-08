@@ -39,6 +39,13 @@
     border-color: rgba(43, 40, 37, 0.2);
   }
 }
+body {
+  font-family: 'Montserrat', sans-serif;
+}
+
+.font-serif {
+  font-family: 'Playfair Display', serif;
+}
 
 /* 4. CÁC CLASS TỰ ĐỊNH NGHĨA */
 .section-title {

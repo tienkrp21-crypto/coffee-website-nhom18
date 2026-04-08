@@ -17,7 +17,10 @@ import OrderHistory from './pages/OrderHistory';
 
 import CoffeeShop from "./CoffeeShop";
 import Users from "./User";
+import ResetPassword from './pages/ResetPassword';
 
+// Thêm dòng này vào danh sách <Routes>
+<Route path="/reset-password" element={<ResetPassword />} />
 function App() {
   return (
     <CartProvider> 
