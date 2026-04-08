@@ -60,29 +60,46 @@ public class UserController {
         return "Thất bại: Sai email hoặc mật khẩu!";
     }
 
-    // 4. API QUÊN MẬT KHẨU (GỬI MAIL CẤP LẠI)
+    // 4. API QUÊN MẬT KHẨU (Bản nâng cấp: Gửi Link)
     @PostMapping("/forgot-password")
     public org.springframework.http.ResponseEntity<String> forgotPassword(@RequestParam String email) {
         Optional<User> userOptional = userRepository.findByEmail(email);
 
         if (userOptional.isPresent()) {
-            User user = userOptional.get();
+            // Tạo 1 thẻ VIP sống 15 phút
+            String resetToken = jwtTokenUtil.generateResetToken(email);
 
-            // Tạo 1 mật khẩu ngẫu nhiên gồm 6 ký tự
-            String newPassword = UUID.randomUUID().toString().substring(0, 6);
+            // Ép cái thẻ VIP đó vào đuôi đường link trang web của Frontend
+            String resetLink = "https://coffee-website-nhom18.vercel.app/reset-password?token=" + resetToken;
 
-            // Lưu mật khẩu mới vào Database
-            user.setPassword(newPassword);
-            userRepository.save(user);
+            // Gửi mail chứa link
+            emailService.sendResetPasswordEmail(email, resetLink);
 
-            // Gọi anh "Bưu tá" đi giao thư chứa mật khẩu mới
-            emailService.sendNewPasswordEmail(email, newPassword);
-
-            // Trả về mã 200 (OK)
-            return org.springframework.http.ResponseEntity.ok("Thành công: Đã gửi mật khẩu mới qua Email của bạn!");
+            return org.springframework.http.ResponseEntity.ok("Thành công: Đã gửi link đặt lại mật khẩu qua Email!");
         }
 
-        // Trả về mã 400 (Bad Request) để báo lỗi cho Frontend
         return org.springframework.http.ResponseEntity.badRequest().body("Thất bại: Không tìm thấy tài khoản với Email này!");
+    }
+
+    // 5. API ĐẶT LẠI MẬT KHẨU (API MỚI - Frontend sẽ gọi hàm này khi khách gõ pass mới)
+    @PostMapping("/reset-password")
+    public org.springframework.http.ResponseEntity<String> resetPassword(@RequestParam String token, @RequestParam String newPassword) {
+        try {
+            // Giải mã thẻ VIP xem của ai. Nếu token hết 15 phút, nó sẽ báo lỗi văng xuống block catch!
+            String email = jwtTokenUtil.extractEmailFromToken(token);
+            Optional<User> userOptional = userRepository.findByEmail(email);
+
+            if (userOptional.isPresent()) {
+                User user = userOptional.get();
+                user.setPassword(newPassword); // Cập nhật mật khẩu mới khách vừa gõ
+                userRepository.save(user);
+                return org.springframework.http.ResponseEntity.ok("Thành công: Đặt lại mật khẩu hoàn tất!");
+            }
+            return org.springframework.http.ResponseEntity.badRequest().body("Thất bại: Không tìm thấy người dùng!");
+
+        } catch (Exception e) {
+            // Bắt lỗi nếu Token bị sửa bậy bạ hoặc đã quá 15 phút
+            return org.springframework.http.ResponseEntity.badRequest().body("Thất bại: Đường link đã hết hạn hoặc không hợp lệ! Vui lòng gửi lại yêu cầu.");
+        }
     }
 }

@@ -11,11 +11,12 @@ public class EmailService {
     @Autowired
     private JavaMailSender mailSender;
 
-    public void sendNewPasswordEmail(String toEmail, String newPassword) {
+    public void sendResetPasswordEmail(String toEmail, String resetLink) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(toEmail);
-        message.setSubject("Yêu cầu cấp lại mật khẩu - Coffee Nhóm 18");
-        message.setText("Chào bạn,\n\nMật khẩu mới của bạn là: " + newPassword + "\n\nVui lòng đăng nhập và đổi lại mật khẩu ngay nhé!");
+        message.setSubject("Yêu cầu đặt lại mật khẩu - Xutore");
+        message.setText("Chào bạn,\n\nBạn đã yêu cầu đặt lại mật khẩu. Vui lòng click vào đường link dưới đây để tạo mật khẩu mới (Link chỉ có hiệu lực trong 15 phút):\n\n"
+                + resetLink + "\n\nNếu bạn không yêu cầu, vui lòng bỏ qua email này.");
 
         mailSender.send(message);
     }

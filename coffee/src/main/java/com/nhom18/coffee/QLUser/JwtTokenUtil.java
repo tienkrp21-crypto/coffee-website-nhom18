@@ -26,4 +26,19 @@ public class JwtTokenUtil {
                 .signWith(key)
                 .compact();
     }
+    // Tạo mã xác thực riêng cho Quên mật khẩu (Chỉ sống được 15 phút)
+    public String generateResetToken(String email) {
+        long resetExpirationTime = 15 * 60 * 1000; // 15 phút
+        return Jwts.builder()
+                .setSubject(email)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + resetExpirationTime))
+                .signWith(key)
+                .compact();
+    }
+
+    // Hàm mở khóa mã xác thực để lấy lại Email
+    public String extractEmailFromToken(String token) {
+        return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody().getSubject();
+    }
 }
