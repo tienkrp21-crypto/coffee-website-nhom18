@@ -57,7 +57,7 @@ const Checkout = () => {
     };
 
     try {
-      const response = await fetch(`${BASE_URL}/orders`, { 
+      const response = await fetch(`${BASE_URL}/checkout`, { 
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -76,7 +76,7 @@ const Checkout = () => {
         alert(`Lỗi đặt hàng: ${errorMsg}`);
       }
     } catch (error) {
-      alert("Không thể kết nối với server thanh toán. Dũng kiểm tra lại nhé!");
+      alert("Không thể kết nối với server thanh toán kiểm tra lại nhé!");
     } finally {
       setLoading(false);
     }
@@ -145,7 +145,7 @@ const Checkout = () => {
               <h3 className="font-serif text-2xl text-dark mb-6 italic">Phương thức thanh toán</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <PaymentOption id="cod" label="Tiền mặt (COD)" current={paymentMethod} set={setPaymentMethod} />
-                <PaymentOption id="banking" label="Chuyển khoản" current={paymentMethod} set={setPaymentMethod} />
+                <PaymentOption id="vnpay" label="Chuyển khoản VNPAY" current={paymentMethod} set={setPaymentMethod} />
               </div>
             </div>
           </div>
