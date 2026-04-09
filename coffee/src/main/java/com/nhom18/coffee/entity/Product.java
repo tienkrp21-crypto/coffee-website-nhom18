@@ -20,22 +20,30 @@ public class Product {
     private Integer id;
 
     // Các cột mới bổ sung theo chuẩn Database của bạn
+    @Column(unique = true, nullable = false, length = 50)
     private String sku;
+
+    @Column(nullable = false, length = 200)
     private String name;
 
     // Đã đổi thành Integer cho khớp với kiểu int trong DB
+    @Column(nullable = false)
     private Integer price;
 
+    @Column(nullable = false, length = 20)
     private String unit;
 
     // DB là stock_quantity, Java là stockQuantity
-    @Column(name = "stock_quantity")
+    @Column(name = "stock_quantity", nullable = false)
     private Integer stockQuantity;
 
-    @Column(name = "image_url")
+    @Column(name = "image_url", length = 255)
     private String imageUrl;
 
+    @Column(columnDefinition = "TEXT")
     private String description;
+
+    @Column(columnDefinition = "TINYINT DEFAULT 1")
     private Integer status;
 
     @Column(name = "created_at")

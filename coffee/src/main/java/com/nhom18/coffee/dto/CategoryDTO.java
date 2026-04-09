@@ -1,5 +1,7 @@
 package com.nhom18.coffee.dto;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
+@JsonPropertyOrder({ "id", "name", "description", "status" })
 public class CategoryDTO {
     private Integer id;
     private String name;
