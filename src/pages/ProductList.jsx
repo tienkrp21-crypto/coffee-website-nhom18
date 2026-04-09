@@ -5,7 +5,8 @@ import { Search } from "lucide-react";
 
 // Cấu hình URL API
 //const BASE_URL = 'http://localhost:8080';
-const BASE_URL = "https://coffee-website-nhom18.onrender.com";
+//const BASE_URL = "https://coffee-website-nhom18.onrender.com";
+const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
 const ProductList = () => {
   const { addToCart } = useCart();
 
