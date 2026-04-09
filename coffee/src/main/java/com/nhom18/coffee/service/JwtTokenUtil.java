@@ -1,12 +1,12 @@
-package com.nhom18.coffee.QLUser;
-
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
-import org.springframework.stereotype.Component;
+package com.nhom18.coffee.service;
 
 import java.security.Key;
 import java.util.Date;
+
+import org.springframework.stereotype.Component;
+
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 
 @Component
 public class JwtTokenUtil {

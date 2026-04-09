@@ -1,18 +1,20 @@
-package com.nhom18.coffee.QLcart;
+package com.nhom18.coffee.controller;
 
-import com.nhom18.coffee.QLcart.CartItem;
-import com.nhom18.coffee.QLproducts.Product;
-import com.nhom18.coffee.QLproducts.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import com.nhom18.coffee.QLcart.CartItem;
+import com.nhom18.coffee.QLcart.CartItemRepository;
+import com.nhom18.coffee.entity.Product;
+import com.nhom18.coffee.repository.ProductRepository;
 
 import java.util.List;
 import java.util.Optional;
 
-// Nếu chữ Product hoặc ProductRepository bị đỏ, nhớ Alt + Enter để Import nhé!
+// Náº¿u chá»¯ Product hoáº·c ProductRepository bá»‹ Ä‘á», nhá»› Alt + Enter Ä‘á»ƒ Import nhÃ©!
 
 @RestController
-@RequestMapping("/cart")
+@RequestMapping("/api/cart")
 @CrossOrigin("*")
 public class CartController {
 

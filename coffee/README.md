@@ -2,9 +2,9 @@
 
 Dự án phát triển hệ thống quản lý và bán hàng cho Tiệm Cà Phê (Đồ án cuối kỳ - XDLTW).
 
-## 🚀 Tiến Độ Hiện Tại (Admin Features)
+## 🚀 Tiến Độ Hiện Tại (Admin & Client Features)
 
-Dựa trên bảng phân công và chức năng quản trị viên, đây là tiến độ thực hiện:
+Dựa trên bảng phân công, đây là tiến độ thực hiện:
 
 - [x] **1. Quản lý danh mục (Category Management)**
   - Thêm, sửa, xóa (soft-delete), ẩn/hiện danh mục nguyên vật liệu.
@@ -12,70 +12,58 @@ Dựa trên bảng phân công và chức năng quản trị viên, đây là ti
 - [x] **2. Quản lý sản phẩm (Product Management)**
   - Thêm, sửa, xóa (soft-delete), lấy chi tiết và phân trang sản phẩm theo danh mục.
   - Áp dụng cấu trúc chuẩn Controller -> Service -> Repository với DTO.
-- [ ] **3. Quản lý nhập kho (Inventory Management)**
+- [x] **3. Quản lý người dùng (User Management)**
+  - Đăng ký và đăng nhập tài khoản.
+  - CRUD User quản lý tài khoản với UserDTO.
+- [x] **4. Quản lý giỏ hàng (Cart Management - Mới chuẩn hóa)**
+  - Cơ chế thêm (Add / Tự động cộng dồn số lượng).
+  - Cập nhật số lượng (Update / tự xóa nếu số lượng <= 0).
+  - Tính tổng tiền (Total).
+- [ ] **5. Quản lý nhập kho (Inventory Management)**
   - _Đang chờ thực hiện..._
-- [ ] **4. Cấu hình vận hành (Voucher/Shipping)**
+- [ ] **6. Cấu hình vận hành (Voucher/Shipping)**
   - _Đang chờ thực hiện..._
-- [ ] **5. Quản lý đơn hàng (Order Management)**
+- [ ] **7. Quản lý đơn hàng (Order Management)**
   - _Đang chờ thực hiện..._
-- [ ] **6. Quản lý thống kê (Statistics)**
-  - _Đang chờ thực hiện..._
-- [ ] **7. Quản lý người dùng (User Management)**
+- [ ] **8. Quản lý thống kê (Statistics)**
   - _Đang chờ thực hiện..._
 
 ---
 
-## 🏗 Luồng Hoạt Động (Data Flow)
+## 🏗 Luồng Hoạt Động (Data Flow) Đã Chuẩn Hóa Toàn Diện
 
-Kiến trúc mã nguồn API tuân theo chuẩn 3-layer của Spring Boot. Luồng dữ liệu đi qua các tầng như sau:
+Kiến trúc mã nguồn API đã được thiết kế lại chặt chẽ theo chuẩn 3-layer Spring Boot:
 
 1. **Client Request:** Gửi HTTP request (Postman, Frontend Client,...).
-2. **Controller:** Nhận HTTP Request và gửi các parameter / body payload xuống Service dưới dạng `DTO` (Ví dụ: `ProductDTO`).
-3. **Service (`Interface` & `Impl`):** Nhận `DTO`, thực thi logic nghiệp vụ (kiểm tra điều kiện, map dữ liệu...). Service sử dụng `Repository` để tương tác với CSDL. Nó sẽ convert giữa `DTO` và `Entity`.
-4. **Repository:** Interface kế thừa từ `JpaRepository`. Chịu trách nhiệm truy vấn trực tiếp Entity xuống dòng dữ liệu (Database MySQL).
-5. **Entity:** Đối tượng Java biểu diễn chính xác cấu trúc của Table Database MySQL (Dùng Annotation `@Table`, `@Column`, ...).
+2. **Controller (API Endpoints):** 
+   - Đón nhận Request và Parameter.
+   - Thêm Validation bằng Annotation `@Valid`.
+   - **Tất cả kết quả được bọc lại trong `ApiResponse<T>` với format chuẩn mực:**
+     `{ "success": true/false, "message": "...", "data": ... }`
+3. **Global Exception Handler & Validation:** 
+   - Nếu Controller bắt gặp lỗi, ngoại lệ không gây sập Server (Lỗi 500) mà được Handler bọc lại thành Response 400 Bad Request hoặc 404 Không Tồn Tại.
+4. **Service (`Interface` & `Impl`):** 
+   - Xử lý Business Logic trung tâm. Tương tác với CSDL qua Repository.
+5. **Repository (Data Data JPA):** 
+   - Interface `JpaRepository` mapping trực tiếp Entity, truy vấn CSDL MySQL.
+6. **Entity:** 
+   - Đại diện chính xác 1-1 Table dưới Database.
 
 ---
 
-## 📚 API Ghi Chú: Danh Mục (Categories)
+## 📚 API Ghi Chú Cơ Bản & Mới Cập Nhật
 
-Base URL: `http://localhost:8080/api/categories`
+Hệ thống cung cấp Endpoint tiêu chuẩn RESTful (Đủ GET/POST/PUT/DELETE):
 
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `GET` | `/` | Lấy danh sách tất cả các danh mục |
-| `GET` | `/{id}` | Lấy chi tiết một danh mục theo ID |
-| `POST` | `/` | Thêm mới một danh mục |
-| `PUT` | `/{id}` | Cập nhật thông tin danh mục theo ID |
-| `DELETE` | `/{id}` | Xóa mềm (Soft Delete - Set status = 0) |
-| `PATCH`| `/{id}/toggle`| Ẩn/Hiện danh mục (Đảo ngược status 0 <-> 1) |
+- **`/api/categories`**: Quản lý thông tin Danh mục (Admin).
+- **`/api/products` và `/api/products/client/search`**: Quản lý Sản phẩm (Admin + Phân trang Client).
+- **`/api/users`**: Quản lý Người Dùng & Auth (Đăng nhập, đăng ký).
+- **`/api/cart`**: Quản lý Giỏ hàng của Client.
 
-## 📚 API Ghi Chú: Sản Phẩm (Products - Admin)
-
-Base URL: `http://localhost:8080/api/products`
-
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `GET` | `?page=0&size=10&keyword=&categoryId=` | Lấy danh sách sản phẩm (có phân trang, search, lọc) |
-| `GET` | `/{id}` | Lấy chi tiết sản phẩm theo ID |
-| `POST` | `/` | Thêm mới một sản phẩm (Có kiểm tra Validation) |
-| `PUT` | `/{id}` | Cập nhật thông tin sản phẩm |
-| `DELETE` | `/{id}` | Xóa mềm sản phẩm theo ID |
-
-_Ghi chú: Có hỗ trợ tìm kiếm cho client tại `/client/search`_
-
-## 📚 API Ghi Chú: Người Dùng (Users)
-
-Base URL: `http://localhost:8080/users`
-
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `POST` | `/register` | Đăng ký tài khoản người dùng mới |
-| `POST` | `/login` | Đăng nhập tài khoản |
-
-## 🛠 Công Nghệ Sử Dụng (Tính đến hiện tại)
+## 🛠 Công Nghệ Sử Dụng
 - Java 21
 - Spring Boot 3.2+ (Web, Data JPA)
 - MySQL Database (Aivencloud)
 - JUnit 5 & Mockito (Unit Testing)
 - Jackson (Xử lý chuỗi JSON)
+- **Cấu trúc chuẩn DTO và ApiResponse Handling.**

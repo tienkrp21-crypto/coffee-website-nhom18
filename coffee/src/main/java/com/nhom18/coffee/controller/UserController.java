@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.nhom18.coffee.dto.ApiResponse;
 import com.nhom18.coffee.dto.UserDTO;
 import com.nhom18.coffee.service.UserService;
 
@@ -23,7 +24,7 @@ import jakarta.validation.Valid;
 
 @Hidden
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/users")
 @CrossOrigin("*")
 public class UserController {
 
@@ -36,29 +37,29 @@ public class UserController {
 
     // --- CÁC HÀM CŨ CỦA BẠN (GIỮ NGUYÊN) ---
     @GetMapping
-    public ResponseEntity<List<UserDTO>> getAll() {
-        return ResponseEntity.ok(userService.getAllUsers());
+    public ResponseEntity<ApiResponse<List<UserDTO>>> getAll() {
+        return ResponseEntity.ok(ApiResponse.success(userService.getAllUsers()));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserDTO> getOne(@PathVariable Integer id) {
-        return ResponseEntity.ok(userService.getUserById(id));
+    public ResponseEntity<ApiResponse<UserDTO>> getOne(@PathVariable Integer id) {
+        return ResponseEntity.ok(ApiResponse.success(userService.getUserById(id)));
     }
 
     @PostMapping
-    public ResponseEntity<UserDTO> create(@Valid @RequestBody UserDTO userDetails) {
-        return new ResponseEntity<>(userService.createUser(userDetails), HttpStatus.CREATED);
+    public ResponseEntity<ApiResponse<UserDTO>> create(@Valid @RequestBody UserDTO userDetails) {
+        return ResponseEntity.ok(ApiResponse.success("Tạo người dùng thành công", userService.createUser(userDetails)));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserDTO> update(@PathVariable Integer id, @Valid @RequestBody UserDTO userDetails) {
-        return ResponseEntity.ok(userService.updateUser(id, userDetails));
+    public ResponseEntity<ApiResponse<UserDTO>> update(@PathVariable Integer id, @Valid @RequestBody UserDTO userDetails) {
+        return ResponseEntity.ok(ApiResponse.success("Cập nhật người dùng thành công", userService.updateUser(id, userDetails)));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Integer id) {
         userService.deleteUser(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.success("Xóa người dùng thành công", null));
     }
 
     // ==========================================
@@ -66,20 +67,20 @@ public class UserController {
     // ==========================================
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@Valid @RequestBody UserDTO userDTO) {
+    public ResponseEntity<ApiResponse<String>> register(@Valid @RequestBody UserDTO userDTO) {
         String message = userService.register(userDTO);
         if (message.startsWith("Thất bại")) {
-            return ResponseEntity.badRequest().body(message); // 400 Bad Request
+            return ResponseEntity.badRequest().body(ApiResponse.error(message)); // 400 Bad Request
         }
-        return ResponseEntity.ok(message); // 200 OK
+        return ResponseEntity.ok(ApiResponse.success(message, null)); // 200 OK
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody UserDTO loginData) {
+    public ResponseEntity<ApiResponse<String>> login(@RequestBody UserDTO loginData) {
         String message = userService.login(loginData);
         if (message.startsWith("Thất bại")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(message); // 401 Unauthorized
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error(message)); // 401 Unauthorized
         }
-        return ResponseEntity.ok(message); // 200 OK
+        return ResponseEntity.ok(ApiResponse.success(message, null)); // 200 OK
     }
 }
