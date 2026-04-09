@@ -1,27 +1,37 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 export default function Categories() {
-  const [categories, setCategories] = useState([
-    {
-      id: 1,
-      name: "Cà phê",
-      description: "Các loại cà phê nguyên chất",
-      productsCount: 12,
-    },
-    {
-      id: 2,
-      name: "Đồ uống",
-      description: "Các loại đồ uống khác",
-      productsCount: 8,
-    },
-    {
-      id: 3,
-      name: "Bánh miếng",
-      description: "Bánh và pastry",
-      productsCount: 15,
-    },
-  ]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get(
+          "https://coffee-website-nhom18-admin.onrender.com/api/categories"
+        );
+        // Filter active categories (status === 1) and add productsCount
+        const activeCategories = response.data
+          .filter((category) => category.status === 1)
+          .map((category) => ({
+            ...category,
+            productsCount: 0, // API doesn't provide this, set to 0
+          }));
+        setCategories(activeCategories);
+        setLoading(false);
+      } catch {
+        setError("Không thể tải danh sách danh mục");
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({ name: "", description: "" });
@@ -38,29 +48,72 @@ export default function Categories() {
     setShowForm(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.name) return;
 
-    if (editingId) {
-      setCategories(
-        categories.map((c) => (c.id === editingId ? { ...c, ...formData } : c))
-      );
-    } else {
-      setCategories([
-        ...categories,
-        {
-          id: Date.now(),
-          ...formData,
-          productsCount: 0,
-        },
-      ]);
+    setSaving(true);
+    setSaveError(null);
+
+    try {
+      if (editingId) {
+        // Edit existing category via API
+        const response = await axios.put(
+          `https://coffee-website-nhom18-admin.onrender.com/api/categories/${editingId}`,
+          {
+            name: formData.name,
+            description: formData.description,
+            status: 1, // Keep active status
+          }
+        );
+
+        // Update the category in the list
+        const updatedCategory = {
+          ...response.data,
+          productsCount: 0, // API might not return this
+        };
+        setCategories(
+          categories.map((c) => (c.id === editingId ? updatedCategory : c))
+        );
+      } else {
+        // Add new category via API
+        const response = await axios.post(
+          "https://coffee-website-nhom18-admin.onrender.com/api/categories",
+          {
+            name: formData.name,
+            description: formData.description,
+            status: 1, // Assuming new categories are active by default
+          }
+        );
+
+        // Add the new category to the list
+        const newCategory = {
+          ...response.data,
+          productsCount: 0, // API might not return this
+        };
+        setCategories([...categories, newCategory]);
+      }
+      setShowForm(false);
+    } catch (error) {
+      setSaveError("Không thể lưu danh mục. Vui lòng thử lại.");
+      console.error("Error saving category:", error);
+    } finally {
+      setSaving(false);
     }
-    setShowForm(false);
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm("Bạn chắc chắn muốn xóa danh mục này?")) {
+  const handleDelete = async (id) => {
+    if (!window.confirm("Bạn chắc chắn muốn xóa danh mục này?")) return;
+
+    try {
+      await axios.delete(
+        `https://coffee-website-nhom18-admin.onrender.com/api/categories/${id}`
+      );
+
+      // Remove the category from the list
       setCategories(categories.filter((c) => c.id !== id));
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      alert("Không thể xóa danh mục. Vui lòng thử lại.");
     }
   };
 
@@ -78,99 +131,125 @@ export default function Categories() {
         </button>
       </div>
 
-      {/* Form */}
-      {showForm && (
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">
-            {editingId ? "Sửa danh mục" : "Thêm danh mục mới"}
-          </h2>
-          <div className="space-y-4">
-            <input
-              type="text"
-              placeholder="Tên danh mục"
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-            />
-            <textarea
-              placeholder="Mô tả"
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              rows="3"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-            />
-            <div className="flex gap-2">
-              <button
-                onClick={handleSave}
-                className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors"
-              >
-                Lưu
-              </button>
-              <button
-                onClick={() => setShowForm(false)}
-                className="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded transition-colors"
-              >
-                Hủy
-              </button>
-            </div>
-          </div>
+      {loading && (
+        <div className="text-center py-8">
+          <p className="text-gray-600">Đang tải danh sách danh mục...</p>
         </div>
       )}
 
-      {/* Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-100 border-b">
-            <tr>
-              <th className="px-6 py-3 text-left font-semibold text-gray-700">
-                Tên danh mục
-              </th>
-              <th className="px-6 py-3 text-left font-semibold text-gray-700">
-                Mô tả
-              </th>
-              <th className="px-6 py-3 text-center font-semibold text-gray-700">
-                Sản phẩm
-              </th>
-              <th className="px-6 py-3 text-center font-semibold text-gray-700">
-                Hành động
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {categories.map((category) => (
-              <tr key={category.id} className="border-b hover:bg-gray-50">
-                <td className="px-6 py-4 font-semibold text-gray-800">
-                  {category.name}
-                </td>
-                <td className="px-6 py-4 text-gray-600">
-                  {category.description}
-                </td>
-                <td className="px-6 py-4 text-center text-gray-800 font-semibold">
-                  {category.productsCount}
-                </td>
-                <td className="px-6 py-4 text-center">
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-8">
+          <p>{error}</p>
+        </div>
+      )}
+
+      {!loading && !error && (
+        <>
+          {showForm && (
+            <div className="bg-white rounded-lg shadow p-6 mb-8">
+              <h2 className="text-xl font-bold text-gray-800 mb-4">
+                {editingId ? "Sửa danh mục" : "Thêm danh mục mới"}
+              </h2>
+
+              {saveError && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                  <p>{saveError}</p>
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <input
+                  type="text"
+                  placeholder="Tên danh mục"
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                  disabled={saving}
+                />
+                <textarea
+                  placeholder="Mô tả"
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
+                  rows="3"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                  disabled={saving}
+                />
+                <div className="flex gap-2">
                   <button
-                    onClick={() => handleEdit(category)}
-                    className="bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded text-sm mr-2 transition-colors"
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-bold py-2 px-4 rounded transition-colors"
                   >
-                    Sửa
+                    {saving ? "Đang lưu..." : "Lưu"}
                   </button>
                   <button
-                    onClick={() => handleDelete(category.id)}
-                    className="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded text-sm transition-colors"
+                    onClick={() => setShowForm(false)}
+                    disabled={saving}
+                    className="bg-gray-400 hover:bg-gray-500 disabled:bg-gray-300 text-white font-bold py-2 px-4 rounded transition-colors"
                   >
-                    Xóa
+                    Hủy
                   </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Table */}
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-gray-100 border-b">
+                <tr>
+                  <th className="px-6 py-3 text-left font-semibold text-gray-700">
+                    Tên danh mục
+                  </th>
+                  <th className="px-6 py-3 text-left font-semibold text-gray-700">
+                    Mô tả
+                  </th>
+                  <th className="px-6 py-3 text-center font-semibold text-gray-700">
+                    Sản phẩm
+                  </th>
+                  <th className="px-6 py-3 text-center font-semibold text-gray-700">
+                    Hành động
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {categories.map((category) => (
+                  <tr key={category.id} className="border-b hover:bg-gray-50">
+                    <td className="px-6 py-4 font-semibold text-gray-800">
+                      {category.name}
+                    </td>
+                    <td className="px-6 py-4 text-gray-600">
+                      {category.description}
+                    </td>
+                    <td className="px-6 py-4 text-center text-gray-800 font-semibold">
+                      {category.productsCount}
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <button
+                        onClick={() => handleEdit(category)}
+                        className="bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded text-sm mr-2 transition-colors"
+                      >
+                        Sửa
+                      </button>
+                      <button
+                        onClick={() => handleDelete(category.id)}
+                        className="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded text-sm transition-colors"
+                      >
+                        Xóa
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
     </div>
   );
 }
