@@ -1,16 +1,15 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-// Thay Github bằng Globe để tránh lỗi Missing Export
 import { Users, GraduationCap, Code, Coffee, Globe, Link as LinkIcon } from 'lucide-react';
 
 const About = () => {
   // THÔNG TIN NHÓM
   const teamMembers = [
-    { id: 1, name: "Trương Hùng Dũng", mssv: "DH52200541", role: "Chủ tiệm" },
-    { id: 2, name: "Lê Nguyễn Khánh Duy", mssv: "DH52200560", role: "Nhân viên" },
-    { id: 3, name: "Võ Minh Thông", mssv: "DH52201517", role: "Nhân viên" },
-    { id: 4, name: "Trần Tiến", mssv: "DH52201561", role: "Nhân viên" },
-    { id: 5, name: "Trần Chánh Biện", mssv: "DH52200384", role: "Nhân viên" },
+    { id: 1, name: "Trương Hùng Dũng", mssv: "DH52200541", role: "Frontend 1 (người dùng)" },
+    { id: 3, name: "Võ Minh Thông", mssv: "DH52201517", role: "Frontend 2 (admin)" },
+    { id: 2, name: "Lê Nguyễn Khánh Duy", mssv: "DH52200560", role: "Backend 1" },
+    { id: 4, name: "Trần Tiến", mssv: "DH52201561", role: "Backend 2" },
+    { id: 5, name: "Trần Chánh Biện", mssv: "DH52200384", role: "Backend 3" },
   ];
 
   const containerVariants = {
