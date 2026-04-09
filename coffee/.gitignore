@@ -1,35 +1,40 @@
-HELP.md
+# ==========================================
+# CẤU HÌNH BỎ QUA CHO DỰ ÁN JAVA SPRING BOOT
+# ==========================================
+
+# 1. Maven (Thư mục build và file tạm)
 target/
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+# (Giữ lại file maven-wrapper.jar để người khác có thể chạy mvnw)
+!.mvn/wrapper/maven-wrapper.jar
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
+# 2. Cấu hình phần mềm IDE (IntelliJ, VS Code, Eclipse)
+.idea/
 *.iml
 *.ipr
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
-
-### VS Code ###
+*.iws
 .vscode/
+.project
+.classpath
+.settings/
+.factorypath
 
-./src/main/resources/application.properties
+# 3. File Log và Cache
+*.log
+.cache/
+
+# 4. File hệ thống (Windows & macOS)
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
