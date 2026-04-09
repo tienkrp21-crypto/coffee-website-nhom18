@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, ShieldCheck, Loader2, ArrowLeft } from 'lucide-react';
 
-const BASE_URL = 'https://coffee-website-nhom18.onrender.com'; //
-
+//const BASE_URL = 'https://coffee-website-nhom18.onrender.com'; //
+const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com'; // 
 const ForgotPassword = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
