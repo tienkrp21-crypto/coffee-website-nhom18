@@ -49,7 +49,7 @@ const Checkout = () => {
       receiverPhone: formData.phone,
       shippingAddress: formData.address,
       paymentMethod: paymentMethod === 'vnpay' ? 'VNPAY' : 'COD',
-      userId: 1, // Tạm thời để cứng ID 1 để không bị lỗi Database
+      userId: 9, // Tạm thời để cứng ID 9 để không bị lỗi Database
       items: cartItems.map(item => ({
         productId: item.id,
         quantity: item.quantity,
