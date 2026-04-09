@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { CheckCircle, Home, ShoppingBag } from "lucide-react";
 
 const PaymentResult = () => {
-  // Đã thêm đầy đủ dấu đóng ngoặc ở cuối dòng này
   const [orderId] = useState(() => Math.floor(Math.random() * 1000000));
 
   return (

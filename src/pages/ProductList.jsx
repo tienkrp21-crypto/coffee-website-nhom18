@@ -32,7 +32,7 @@ const ProductList = () => {
         }
 
         // 2. Lấy sản phẩm
-        const prodResponse = await fetch(`${BASE_URL}/products`); // Đảm bảo Backend có API /products
+        const prodResponse = await fetch(`${BASE_URL}/products`);
         if (prodResponse.ok) {
           const prodData = await prodResponse.json();
           setApiProducts(prodData);
@@ -47,7 +47,7 @@ const ProductList = () => {
 
   // --- LOGIC LỌC VÀ SẮP XẾP SẢN PHẨM ---
   const filteredProducts = useMemo(() => {
-    // SỬ DỤNG DỮ LIỆU THẬT TỪ API Ở ĐÂY
+    // SỬ DỤNG DỮ LIỆU THẬT TỪ API 
     let filtered = [...apiProducts];
 
     // Lọc theo danh mục được chọn

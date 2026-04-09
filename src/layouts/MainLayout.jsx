@@ -51,8 +51,8 @@ const MainLayout = () => {
       <div className="bg-primary text-dark py-2 px-4 hidden lg:block">
         <div className="container mx-auto flex justify-between items-center text-[10px] font-black uppercase tracking-[0.2em]">
           <div className="flex gap-6">
-            <span className="flex items-center gap-2"><Mail size={14} /> info@cafematerial.com</span>
-            <span className="flex items-center gap-2"><Phone size={14} /> +012 345 6789</span>
+            <span className="flex items-center gap-2"><Mail size={14} /> nhom18@cafematerial.com</span>
+            <span className="flex items-center gap-2"><Phone size={14} /> +09 999 999 999</span>
           </div>
           <div>Giờ mở cửa: Thứ 2 - Thứ 7, 8:00 AM - 5:00 PM</div>
         </div>
@@ -68,6 +68,7 @@ const MainLayout = () => {
           <nav className="hidden md:flex gap-10 items-center">
             <Link to="/" className={`font-black uppercase text-xs tracking-widest transition ${isActive('/') ? 'text-primary' : 'text-white hover:text-primary'}`}>Trang Chủ</Link>
             <Link to="/products" className={`font-black uppercase text-xs tracking-widest transition ${isActive('/products') || location.pathname.includes('/product/') ? 'text-primary' : 'text-white hover:text-primary'}`}>Menu Sản Phẩm</Link>
+            <Link to="/about" className={`font-black uppercase text-xs tracking-widest transition ${isActive('/about') ? 'text-primary' : 'text-white hover:text-primary'}`}>Về Chúng Tôi</Link>
           </nav>
 
           <div className="flex items-center gap-8">
@@ -144,7 +145,7 @@ const MainLayout = () => {
         <Outlet />
       </main>
 
-      {/* 4. FOOTER (KHÔI PHỤC BẢN GỐC 4 CỘT) */}
+      {/* 4. FOOTER */}
       <footer 
         className="bg-dark text-secondary pt-20 pb-10 border-t-4 border-primary mt-auto"
         style={{

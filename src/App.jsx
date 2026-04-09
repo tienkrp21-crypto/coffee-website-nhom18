@@ -15,6 +15,7 @@ import Profile from './pages/Profile';
 import OrderHistory from './pages/OrderHistory';
 import CoffeeShop from "./CoffeeShop";
 import Users from "./User";
+import About from './pages/About';
 function App() {
   return (
     <CartProvider> 
@@ -23,6 +24,7 @@ function App() {
           {/* Nhóm các trang dùng chung Header/Footer */}
           <Route path="/" element={<MainLayout />}>
             <Route index element={<Home />} />
+            <Route path="about" element={<About />} />
             <Route path="products" element={<ProductList />} />
             <Route path="product/:id" element={<ProductDetail />} />
             <Route path="cart" element={<Cart />} />
