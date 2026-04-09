@@ -29,10 +29,7 @@ const Profile = () => {
         }
       } catch (error) {
         console.error("Lỗi:", error);
-        // Dữ liệu giả để test giao diện
-        setUserData({ fullName: "Trương Hùng Dũng", email: "dung100504@gmail.com", phone: "09xxxxxxxx" });
       } finally {
-        // Giả lập loading để thấy trang chuyển mượt mà
         setTimeout(() => setLoading(false), 1200);
       }
     };
@@ -43,7 +40,7 @@ const Profile = () => {
   const handleLogout = () => {
     localStorage.removeItem('token');
     alert('Đăng xuất thành công! Hẹn gặp lại bạn tại CafeMaterial.');
-    navigate('/'); // Quay về trang Home sau khi đăng xuất
+    navigate('/');
   };
 
   if (loading) return <LoadingPage />;

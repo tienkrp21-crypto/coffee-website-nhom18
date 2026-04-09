@@ -2,7 +2,6 @@ import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
 import { CartProvider } from './context/CartContext'; 
-
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -32,12 +31,10 @@ function App() {
             <Route path="profile" element={<Profile />} />
             <Route path="orders" element={<OrderHistory />} />
           </Route>
-
           {/* Các trang không dùng chung Header */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          
           <Route path="/coffee-shop-info" element={<CoffeeShop />} />
           <Route path="/users-list" element={<Users />} />
         </Routes>

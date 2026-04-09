@@ -7,7 +7,7 @@ import { ShoppingCart, ChevronLeft, Check } from "lucide-react";
 const BASE_URL = "https://coffee-website-nhom18.onrender.com";
 
 const ProductDetail = () => {
-  const { id } = useParams(); // Lấy ID từ thanh địa chỉ (URL)
+  const { id } = useParams();
   const { addToCart } = useCart();
 
   // State lưu dữ liệu sản phẩm từ API
@@ -18,7 +18,7 @@ const ProductDetail = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/products/${id}`); // Gọi API theo ID
+        const response = await fetch(`${BASE_URL}/products/${id}`); 
         if (!response.ok) throw new Error("Không tìm thấy sản phẩm");
 
         const data = await response.json();
@@ -27,14 +27,13 @@ const ProductDetail = () => {
         console.error("Lỗi:", error);
         setProduct(null);
       } finally {
-        setLoading(false); // Tắt trạng thái đang tải
+        setLoading(false); 
       }
     };
 
     fetchProduct();
   }, [id]);
 
-  // Hiển thị lúc đang chờ data từ Backend
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-secondary">
@@ -119,7 +118,6 @@ const ProductDetail = () => {
                   }
                   className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
                   alt={product.name}
-                  // Thêm cái này để nếu ảnh vẫn lỗi thì hiện ảnh mặc định cho đẹp
                   onError={(e) => {
                     e.target.src =
                       "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?q=80&w=400";

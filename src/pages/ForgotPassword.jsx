@@ -36,7 +36,7 @@ const ForgotPassword = () => {
     
     setLoadingSend(true);
     try {
-      const response = await fetch(`${BASE_URL}/users/forgot-password/send-otp?email=${email}`, {
+      const response = await fetch(`${BASE_URL}/users/got-pforassword/send-otp?email=${email}`, {
         method: 'POST'
       });
       
@@ -65,7 +65,7 @@ const ForgotPassword = () => {
     
     setLoadingConfirm(true);
     try {
-      const response = await fetch(`${BASE_URL}/users/forgot-password/verify`, {
+      const response = await fetch(`${BASE_URL}/users/confirm-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
