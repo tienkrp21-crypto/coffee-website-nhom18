@@ -18,10 +18,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.nhom18.coffee.dto.UserDTO;
 import com.nhom18.coffee.service.UserService;
 
-import io.swagger.v3.oas.annotations.Hidden;
+
 import jakarta.validation.Valid;
 
-@Hidden
+
 @RestController
 @RequestMapping("/users")
 @CrossOrigin("*")

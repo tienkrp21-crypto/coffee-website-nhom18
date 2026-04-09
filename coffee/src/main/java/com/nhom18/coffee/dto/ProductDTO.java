@@ -45,10 +45,6 @@ public class ProductDTO {
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-    public ProductDTO() {
-    }
-
     public Integer getId() {
         return id;
     }
