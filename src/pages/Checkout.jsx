@@ -43,40 +43,50 @@ const Checkout = () => {
     e.preventDefault();
     setLoading(true);
 
+    // ĐÃ SỬA TÊN BIẾN ĐỂ KHỚP VỚI BACKEND DTO
     const orderData = {
-      customer: formData,
+      receiverName: formData.fullName,
+      receiverPhone: formData.phone,
+      shippingAddress: formData.address,
+      paymentMethod: paymentMethod === 'vnpay' ? 'VNPAY' : 'COD',
+      userId: 1, // Tạm thời để cứng ID 1 để không bị lỗi Database
       items: cartItems.map(item => ({
         productId: item.id,
-        name: item.name,
         quantity: item.quantity,
         price: item.price
-      })),
-      totalAmount: totalPrice + shippingFee,
-      paymentMethod,
-      orderDate: new Date().toISOString()
+      }))
     };
 
     try {
+      // ĐÃ SỬA ĐƯỜNG DẪN THÀNH /checkout
       const response = await fetch(`${BASE_URL}/checkout`, { 
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}` // Gửi token nếu Backend yêu cầu xác thực
+          'Authorization': `Bearer ${localStorage.getItem('token')}` 
         },
         body: JSON.stringify(orderData),
       });
 
       if (response.ok) {
         const result = await response.json();
-        alert("Đặt hàng thành công! CafeMaterial đang chuẩn bị món cho bạn.");
         if (clearCart) clearCart(); // Xóa sạch giỏ hàng
-        navigate('/payment-result', { state: { orderId: result.orderId || result.id } }); // Chuyển sang trang kết quả với ID thật
+
+        // KIỂM TRA NẾU LÀ VNPAY THÌ CHUYỂN HƯỚNG SANG TRANG THANH TOÁN
+        if (result.paymentUrl) {
+            window.location.href = result.paymentUrl;
+        } else {
+            // NẾU LÀ TIỀN MẶT COD THÌ QUA TRANG KẾT QUẢ LUÔN
+            alert("Đặt hàng thành công! CafeMaterial đang chuẩn bị món cho bạn.");
+            navigate('/payment-result', { state: { orderId: result.orderId || result.id } }); 
+        }
+
       } else {
         const errorMsg = await response.text();
         alert(`Lỗi đặt hàng: ${errorMsg}`);
       }
     } catch (error) {
-      alert("Không thể kết nối với server thanh toán kiểm tra lại nhé!");
+      alert("Không thể kết nối với server thanh toán, vui lòng kiểm tra lại!");
     } finally {
       setLoading(false);
     }
@@ -145,7 +155,8 @@ const Checkout = () => {
               <h3 className="font-serif text-2xl text-dark mb-6 italic">Phương thức thanh toán</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <PaymentOption id="cod" label="Tiền mặt (COD)" current={paymentMethod} set={setPaymentMethod} />
-                <PaymentOption id="vnpay" label="Chuyển khoản VNPAY" current={paymentMethod} set={setPaymentMethod} />
+                {/* ĐÃ SỬA ID THÀNH vnpay */}
+                <PaymentOption id="vnpay" label="Chuyển khoản VNPay" current={paymentMethod} set={setPaymentMethod} />
               </div>
             </div>
           </div>
