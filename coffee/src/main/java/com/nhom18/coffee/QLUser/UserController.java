@@ -117,4 +117,32 @@ public class UserController {
             return org.springframework.http.ResponseEntity.badRequest().body("Thất bại: Dữ liệu không hợp lệ!");
         }
     }
+    // 4. API LẤY THÔNG TIN PROFILE QUA TOKEN
+    @CrossOrigin("*")
+    @GetMapping("/profile")
+    public org.springframework.http.ResponseEntity<?> getUserProfile(@RequestHeader("Authorization") String bearerToken) {
+        try {
+            // Frontend gửi lên có chữ "Bearer " ở đầu, nên phải cắt bỏ 7 ký tự đầu tiên để lấy đúng Token
+            String token = bearerToken.substring(7);
+
+            // Giải mã Token để lấy Email
+            io.jsonwebtoken.Claims claims = jwtTokenUtil.extractAllClaims(token);
+            String email = claims.getSubject();
+
+            // Lấy thông tin User từ Database
+            Optional<User> userOptional = userRepository.findByEmail(email);
+
+            if (userOptional.isPresent()) {
+                // Trả về toàn bộ thông tin User (để FE tự lấy fullName, phone, email...)
+                return org.springframework.http.ResponseEntity.ok(userOptional.get());
+            }
+
+            return org.springframework.http.ResponseEntity.badRequest().body("Lỗi: Không tìm thấy người dùng!");
+
+        } catch (io.jsonwebtoken.ExpiredJwtException e) {
+            return org.springframework.http.ResponseEntity.status(401).body("Lỗi: Phiên đăng nhập đã hết hạn!");
+        } catch (Exception e) {
+            return org.springframework.http.ResponseEntity.status(401).body("Lỗi: Token không hợp lệ!");
+        }
+    }
 }
