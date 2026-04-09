@@ -20,8 +20,10 @@ Dựa trên bảng phân công và chức năng quản trị viên, đây là ti
   - _Đang chờ thực hiện..._
 - [ ] **6. Quản lý thống kê (Statistics)**
   - _Đang chờ thực hiện..._
-- [ ] **7. Quản lý người dùng (User Management)**
-  - _Đang chờ thực hiện..._
+- [x] **7. Quản lý người dùng (User Management)**
+  - Lấy danh sách tài khoản người dùng đăng ký.
+  - Chức năng Khóa/Mở khóa tài khoản người dùng (`status`).
+  - Xóa tài khoản (xóa mềm).
 
 ---
 
@@ -64,14 +66,18 @@ Base URL: `http://localhost:8080/api/products`
 
 _Ghi chú: Có hỗ trợ tìm kiếm cho client tại `/client/search`_
 
-## 📚 API Ghi Chú: Người Dùng (Users)
+## 📚 API Ghi Chú: Người Dùng (Users - Admin)
 
 Base URL: `http://localhost:8080/users`
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `POST` | `/register` | Đăng ký tài khoản người dùng mới |
-| `POST` | `/login` | Đăng nhập tài khoản |
+| `GET` | `/` | Lấy danh sách tất cả người dùng / khách hàng |
+| `GET` | `/{id}` | Lấy chi tiết thông tin 1 người dùng |
+| `POST` | `/` | Thêm mới người dùng (Admin tạo thủ công) |
+| `PUT` | `/{id}` | Cập nhật thông tin người dùng |
+| `DELETE` | `/{id}` | Xóa thông tin (Xóa mềm) người dùng |
+| `PATCH`| `/{id}/toggle` | Khóa / Mở khóa tài khoản (Active/Inactive) |
 
 ## 🛠 Công Nghệ Sử Dụng (Tính đến hiện tại)
 - Java 21

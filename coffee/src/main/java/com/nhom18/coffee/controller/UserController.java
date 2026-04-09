@@ -62,24 +62,12 @@ public class UserController {
     }
 
     // ==========================================
-    // --- TASK 1: CHỨC NĂNG ĐĂNG KÝ & ĐĂNG NHẬP ---
+    // --- TASK 1: QUẢN LÝ NGƯỜI DÙNG (ADMIN) ---
     // ==========================================
 
-    @PostMapping("/register")
-    public ResponseEntity<String> register(@Valid @RequestBody UserDTO userDTO) {
-        String message = userService.register(userDTO);
-        if (message.startsWith("Thất bại")) {
-            return ResponseEntity.badRequest().body(message); // 400 Bad Request
-        }
-        return ResponseEntity.ok(message); // 200 OK
-    }
-
-    @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody UserDTO loginData) {
-        String message = userService.login(loginData);
-        if (message.startsWith("Thất bại")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(message); // 401 Unauthorized
-        }
-        return ResponseEntity.ok(message); // 200 OK
+    @org.springframework.web.bind.annotation.PatchMapping("/{id}/toggle")
+    public ResponseEntity<String> toggleStatus(@PathVariable Integer id) {
+        userService.toggleUserStatus(id);
+        return ResponseEntity.ok("Đã thay đổi trạng thái hoạt động của tài khoản!");
     }
 }

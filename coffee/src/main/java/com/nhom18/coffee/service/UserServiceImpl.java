@@ -94,35 +94,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String register(UserDTO userDTO) {
-        Optional<User> existingUser = userRepository.findByEmail(userDTO.getEmail());
-        if (existingUser.isPresent()) {
-            return "Thất bại: Email này đã được đăng ký!";
-        }
-
-        User user = mapToEntity(userDTO);
-        if (user.getStatus() == null) {
-            user.setStatus(1); // 1 = Tài khoản đang hoạt động
-        }
-        if (user.getRoleId() == null) {
-            user.setRoleId(2); // Giả sử 2 là quyền Khách hàng (Customer)
-        }
-
-        userRepository.save(user);
-        return "Thành công: Đăng ký tài khoản hoàn tất!";
-    }
-
-    @Override
-    public String login(UserDTO loginData) {
-        Optional<User> user = userRepository.findByEmail(loginData.getEmail());
-
-        if (user.isPresent() && user.get().getPassword().equals(loginData.getPassword())) {
-            // (Hiện tại trả về chữ, sau này sẽ nâng cấp lên JWT)
-            // Lưu ý logic thực tế nên check password được mã hóa BCrypt
-            return "Thành công: Đăng nhập hợp lệ!";
-        }
-
-        return "Thất bại: Sai email hoặc mật khẩu!";
+    public void toggleUserStatus(Integer id) {
+        User existingUser = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng với ID: " + id));
+        
+        // Cập nhật trạng thái: Nếu đang là 1 (Hoạt động) thì chuyển thành 0 (Khóa) và ngược lại
+        existingUser.setStatus(existingUser.getStatus() != null && existingUser.getStatus() == 1 ? 0 : 1);
+        userRepository.save(existingUser);
     }
 
     // --- Helper Methods to map between DTO and Entity ---
