@@ -23,7 +23,7 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable()) // Tắt bảo vệ CSRF để Postman gửi dữ liệu được
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll() // MỞ CỬA TỰ DO cho mọi API có chữ /api/auth/
+                .requestMatchers("/api/auth/**", "/error").permitAll() // MỞ CỬA TỰ DO cho mọi API có chữ /api/auth/
                 .anyRequest().authenticated() // Các API còn lại (như /api/cart) vẫn khóa chặt
             );
         return http.build();
