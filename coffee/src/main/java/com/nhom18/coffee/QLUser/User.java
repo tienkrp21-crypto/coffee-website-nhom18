@@ -26,6 +26,17 @@ public class User {
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private Timestamp createdAt;
+    @Column(name = "otp_code")
+    private String otpCode;
+
+    @Column(name = "otp_expiry")
+    private Timestamp otpExpiry;
+
+    // --- NHỚ DÁN THÊM GETTER & SETTER CHO 2 BIẾN NÀY XUỐNG DƯỚI CÙNG NHÉ ---
+    public String getOtpCode() { return otpCode; }
+    public void setOtpCode(String otpCode) { this.otpCode = otpCode; }
+    public Timestamp getOtpExpiry() { return otpExpiry; }
+    public void setOtpExpiry(Timestamp otpExpiry) { this.otpExpiry = otpExpiry; }
 
     // --- GETTER & SETTER ---
     public Integer getId() { return id; }
