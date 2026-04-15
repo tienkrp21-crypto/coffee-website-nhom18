@@ -10,35 +10,29 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/login');
+    const savedUser = localStorage.getItem('user');
+    
+    if (!savedUser) {
+      navigate('/');
       return;
     }
 
-    const fetchProfile = async () => {
-      try {
-        // eslint-disable-next-line no-undef
-        const response = await fetch(`${BASE_URL}/users/profile`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setUserData(data);
-        }
-      } catch (error) {
-        console.error("Lỗi:", error);
-      } finally {
-        setTimeout(() => setLoading(false), 1200);
-      }
-    };
-    fetchProfile();
+    try {
+      const userObj = JSON.parse(savedUser);
+      setUserData(userObj);
+    } catch (error) {
+      console.error("Lỗi đọc dữ liệu:", error);
+      localStorage.removeItem('user');
+      navigate('/');
+    } finally {
+      setTimeout(() => setLoading(false), 800);
+    }
   }, [navigate]);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem('user');
     alert('Đăng xuất thành công! Hẹn gặp lại bạn tại CafeMaterial.');
-    navigate('/');
+    window.location.href = '/'; 
   };
 
   if (loading) return <LoadingPage />;
@@ -62,11 +56,21 @@ const Profile = () => {
                 <div className="w-full h-full bg-gray-100 rounded-full flex items-center justify-center">
                   <User size={64} className="text-gray-300" />
                 </div>
-                <h2 className="font-serif text-2xl uppercase tracking-wider mb-2">{userData?.fullName || 'Khách hàng'}</h2>
-                <p className="text-[#E88F2A] text-[10px] font-black uppercase tracking-[0.2em]">Thành viên CoffeeMaterial</p>
               </div>
-              <h2 className="font-serif text-3xl text-dark mb-2">{userData?.fullName}</h2>
-              <p className="text-primary text-[10px] uppercase font-black tracking-[0.2em] mb-8">Khách hàng thân thiết</p>
+              <h2 className="font-serif text-2xl uppercase tracking-wider mb-2">{userData?.fullName || 'Khách hàng'}</h2>
+              <p className="text-[#E88F2A] text-[10px] font-black uppercase tracking-[0.2em] mb-8">Thành viên CoffeeMaterial</p>
+
+              <div className="flex flex-col gap-4">
+                <button className="text-xs font-bold border-b-2 border-dark pb-1 hover:text-primary hover:border-primary transition uppercase">
+                  CẬP NHẬT ẢNH
+                </button>
+                <button 
+                  onClick={() => navigate('/order-history')}
+                  className="mt-4 bg-[#2B2825] text-white py-3 px-6 text-[10px] font-black uppercase tracking-widest hover:bg-[#E88F2A] transition-all"
+                >
+                  Xem lịch sử đơn hàng
+                </button>
+              </div>
             </div>
           </div>
 
@@ -81,10 +85,9 @@ const Profile = () => {
               </div>
 
               <div className="space-y-10">
-    
                 <ProfileItem icon={<User size={18}/>} label="Họ và tên" value={userData?.fullName} isEditing={isEditing} />
                 <ProfileItem icon={<Mail size={18}/>} label="Địa chỉ Email" value={userData?.email} isEditing={false} />
-                <ProfileItem icon={<Phone size={18}/>} label="Số điện thoại" value={userData?.phone || "Chưa cập nhật"} isEditing={isEditing} />
+                <ProfileItem icon={<Phone size={18}/>} label="Số điện thoại" value={userData?.phone} isEditing={isEditing} />
                 
                 <div className="pt-4 border-t border-gray-100">
                   <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">
