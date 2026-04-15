@@ -1,26 +1,37 @@
 package com.nhom18.coffee.QLUser;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class EmailService {
-
-    @Autowired
-    private JavaMailSender mailSender;
-
+    @Value("${google.script.url}")
+    private String googleScriptUrl;
     public void sendOtpEmail(String toEmail, String otpCode) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(toEmail);
-        message.setSubject("Mã xác nhận đổi mật khẩu - CAFE MATERIAL");
-        message.setText("Chào bạn,\n\n"
-                + "Bạn vừa yêu cầu đổi mật khẩu tại hệ thống Cafe Material.\n"
-                + "Mã xác nhận (OTP) của bạn là: " + otpCode + "\n\n"
-                + "Mã này có hiệu lực trong vòng 5 phút. Vui lòng không chia sẻ mã này cho bất kỳ ai!\n\n"
-                + "Trân trọng,\n"
-                + "Đội ngũ Cafe Material.");
+        RestTemplate restTemplate = new RestTemplate();
 
-        mailSender.send(message);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        Map<String, String> body = new HashMap<>();
+        body.put("to", toEmail);
+        body.put("subject", "Mã OTP Xác Nhận Quên Mật Khẩu");
+        body.put("body", "Xin chào,\n\nMã OTP của bạn là: " + otpCode + "\nMã này có hiệu lực trong 5 phút. Vui lòng không chia sẻ cho ai!");
+
+        HttpEntity<Map<String, String>> request = new HttpEntity<>(body, headers);
+
+        try {
+            restTemplate.postForEntity(googleScriptUrl, request, String.class);
+            System.out.println("Đã gửi mail THẬT qua Google Apps Script!");
+        } catch (Exception e) {
+            System.out.println("Lỗi gửi mail: " + e.getMessage());
+        }
     }
 }
