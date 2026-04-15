@@ -34,8 +34,10 @@ function App() {
             <Route path="payment-result" element={<PaymentResult />} />
             <Route path="profile" element={<Profile />} />
             <Route path="orders" element={<OrderHistory />} />
+            <Route path="/order-history" element={<OrderHistory />} />
           </Route>
           {/* Các trang không dùng chung Header */}
+          
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
