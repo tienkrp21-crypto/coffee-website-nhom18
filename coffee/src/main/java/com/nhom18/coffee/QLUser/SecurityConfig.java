@@ -1,4 +1,5 @@
 package com.nhom18.coffee.QLUser;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -11,22 +12,28 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    // Cấp cho Spring Boot một cái máy băm mật khẩu chuẩn BCrypt
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // Bộ luật dặn dò bảo vệ
-        @Bean
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .cors(cors -> cors.configure(http))
-            .csrf(csrf -> csrf.disable()) // Tắt để Postman/Frontend gửi được dữ liệu
+            .csrf(csrf -> csrf.disable()) 
             .authorizeHttpRequests(auth -> auth
-                // MỞ CỬA CHO: Quên mật khẩu (/api/auth) VÀ Đăng nhập/Đăng ký (/users)
-                .requestMatchers("/api/auth/**", "/users/**", "/error").permitAll() 
-                .anyRequest().authenticated() // Những cái khác (Giỏ hàng, Thanh toán) mới bắt khóa
+                // ĐÃ MỞ CỬA FULL OPTION CHO TOÀN BỘ FRONTEND
+                .requestMatchers(
+                    "/api/auth/**", 
+                    "/users/**", 
+                    "/checkout/**",    
+                    "/products/**",    
+                    "/categories/**",  
+                    "/orders/**",      // Thêm cái này để xem và hủy Lịch sử đơn hàng
+                    "/error"
+                ).permitAll()
+                .anyRequest().authenticated() 
             );
         return http.build();
     }
