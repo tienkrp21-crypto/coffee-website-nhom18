@@ -18,14 +18,15 @@ public class SecurityConfig {
     }
 
     // Bộ luật dặn dò bảo vệ
-    @Bean
+        @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .cors(cors -> cors.configure(http))
-            .csrf(csrf -> csrf.disable()) // Tắt bảo vệ CSRF để Postman gửi dữ liệu được
+            .csrf(csrf -> csrf.disable()) // Tắt để Postman/Frontend gửi được dữ liệu
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/error").permitAll() // MỞ CỬA TỰ DO cho mọi API có chữ /api/auth/
-                .anyRequest().authenticated() // Các API còn lại (như /api/cart) vẫn khóa chặt
+                // MỞ CỬA CHO: Quên mật khẩu (/api/auth) VÀ Đăng nhập/Đăng ký (/users)
+                .requestMatchers("/api/auth/**", "/users/**", "/error").permitAll() 
+                .anyRequest().authenticated() // Những cái khác (Giỏ hàng, Thanh toán) mới bắt khóa
             );
         return http.build();
     }
