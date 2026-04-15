@@ -1,25 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, ShieldCheck, Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';
 
-//const BASE_URL = 'https://coffee-website-nhom18.onrender.com'; //
-const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com'; // 
+const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
+
 const ForgotPassword = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [otp, setOtp] = useState('');
   
-  // MẸO 2: Biến useState ngầm để lưu Token từ Backend gửi về
   const [otpToken, setOtpToken] = useState(''); 
-  
-  // MẸO 1: Trạng thái đồng hồ đếm ngược
   const [countdown, setCountdown] = useState(0); 
   
   const [loadingSend, setLoadingSend] = useState(false);
   const [loadingConfirm, setLoadingConfirm] = useState(false);
 
-  // Logic chạy đồng hồ đếm ngược
   useEffect(() => {
     let timer;
     if (countdown > 0) {
@@ -32,27 +28,28 @@ const ForgotPassword = () => {
 
   // 1. Hàm xử lý Lấy mã OTP
   const handleGetOtp = async () => {
-    if (!email) return alert("Dũng ơi, nhập Email trước khi lấy mã nhé!");
-    
+    if (!email) return alert("Vui lòng nhập Email trước khi lấy mã nhé!");
     setLoadingSend(true);
+    
     try {
-      const response = await fetch(`${BASE_URL}/users/got-pforassword/send-otp?email=${email}`, {
-        method: 'POST'
+      const response = await fetch(`${BASE_URL}/api/auth/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email })
       });
       
       if (response.ok) {
         const data = await response.json();
-        // MẸO 2: Cất Token ẩn vào State ngay khi nhận được
         setOtpToken(data.token); 
         
-        // MẸO 1: Khởi động đếm ngược 60 giây và khóa nút
         setCountdown(60); 
-        alert("Mã OTP đã được gửi! Dũng kiểm tra hòm thư nhé.");
+        alert("Mã OTP đã được gửi! Bạn kiểm tra hòm thư nhé.");
       } else {
-        alert("Email này chưa đăng ký tài khoản rồi!");
+        alert("Email này chưa đăng ký tài khoản!");
       }
+    // eslint-disable-next-line no-unused-vars
     } catch (error) {
-      alert("Lỗi kết nối máy chủ rồi Dũng ơi!");
+      alert("Lỗi kết nối máy chủ!");
     } finally {
       setLoadingSend(false);
     }
@@ -61,10 +58,11 @@ const ForgotPassword = () => {
   // 2. Hàm xử lý Xác nhận đổi mật khẩu
   const handleResetPassword = async (e) => {
     e.preventDefault();
-    if (!otp || !newPassword) return alert("Dũng điền nốt mã OTP và mật khẩu mới nha!");
+    if (!otp || !newPassword) return alert("Điền đủ mã OTP và mật khẩu mới nha!");
     
     setLoadingConfirm(true);
     try {
+  
       const response = await fetch(`${BASE_URL}/users/confirm-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -72,16 +70,17 @@ const ForgotPassword = () => {
           email, 
           newPassword, 
           otp,
-          token: otpToken // MẸO 2: Đính kèm Token ẩn để Tiến kiểm duyệt
+          token: otpToken 
         }),
       });
 
       if (response.ok) {
         alert("Tuyệt vời! Mật khẩu mới đã sẵn sàng.");
-        navigate('/'); // Về Home để hiện Modal đăng nhập mới
+        navigate('/'); 
       } else {
-        alert("Mã OTP bị sai hoặc đã hết hạn rồi Dũng ơi!");
+        alert("Mã OTP bị sai hoặc đã hết hạn!");
       }
+    // eslint-disable-next-line no-unused-vars
     } catch (error) {
       alert("Lỗi hệ thống khi đổi mật khẩu!");
     } finally {
@@ -99,62 +98,44 @@ const ForgotPassword = () => {
         </div>
 
         <form onSubmit={handleResetPassword} className="space-y-6">
-          {/* Email */}
           <div>
             <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 tracking-widest">Địa chỉ Email</label>
             <input 
-              type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
+              type="email" required value={email} onChange={(e) => setEmail(e.target.value)} 
+              className="w-full px-4 py-3 border border-gray-100 focus:border-primary outline-none transition bg-gray-50 mb-1" 
               placeholder="email@example.com"
-              className="w-full px-4 py-3 border border-gray-100 focus:border-primary outline-none transition bg-gray-50 font-serif"
             />
+            <p className="text-[10px] text-primary italic">
+              * Vui lòng kiểm tra cả mục Spam/Quảng cáo nếu không thấy mã.
+            </p>
           </div>
 
-          {/* Mật khẩu mới */}
           <div>
             <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 tracking-widest">Mật khẩu mới</label>
-            <input 
-              type="password" required value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full px-4 py-3 border border-gray-100 focus:border-primary outline-none transition bg-gray-50"
-            />
+            <input type="password" required value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full px-4 py-3 border border-gray-100 focus:border-primary outline-none transition bg-gray-50" />
           </div>
 
-          {/* OTP & Nút lấy mã */}
           <div className="flex gap-2 items-end">
             <div className="flex-grow">
               <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 tracking-widest">Mã OTP</label>
-              <input 
-                type="text" required value={otp} onChange={(e) => setOtp(e.target.value)}
-                placeholder="6 ký tự"
-                className="w-full px-4 py-3 border border-gray-100 focus:border-primary outline-none transition bg-gray-50"
-              />
+              <input type="text" required value={otp} onChange={(e) => setOtp(e.target.value)} className="w-full px-4 py-3 border border-gray-100 focus:border-primary outline-none transition bg-gray-50" />
             </div>
             
-            {/* Nút Lấy mã: Bị khóa nếu đang đếm ngược */}
             <button 
               type="button" 
               onClick={handleGetOtp} 
               disabled={loadingSend || countdown > 0}
-              className={`px-4 py-3.5 text-xs font-bold uppercase transition-all min-w-[100px]
+              className={`px-4 py-3.5 text-xs font-bold uppercase transition-all min-w-[100px] h-[50px] flex items-center justify-center
                 ${countdown > 0 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-dark text-white hover:bg-primary'}`}
             >
-              {loadingSend ? <Loader2 className="animate-spin mx-auto" size={18} /> : (countdown > 0 ? `${countdown}s` : "Lấy mã")}
+              {loadingSend ? <Loader2 className="animate-spin" size={18} /> : (countdown > 0 ? `${countdown}s` : "Lấy mã")}
             </button>
           </div>
 
-          <button 
-            type="submit" disabled={loadingConfirm}
-            className="w-full bg-dark text-white py-4 font-black uppercase text-xs tracking-[0.3em] hover:bg-primary transition-all flex items-center justify-center gap-3 shadow-lg"
-          >
+          <button type="submit" disabled={loadingConfirm} className="w-full bg-dark text-white py-4 font-black uppercase text-xs tracking-[0.3em] hover:bg-primary transition-all flex items-center justify-center gap-3 mt-4">
             {loadingConfirm ? <Loader2 className="animate-spin" /> : "Xác nhận đổi mật khẩu"}
           </button>
         </form>
-
-        <div className="mt-8 text-center border-t pt-6">
-          <Link to="/" className="text-gray-400 hover:text-primary transition-all text-xs font-bold uppercase flex items-center justify-center gap-2">
-            <ArrowLeft size={14} /> Quay về trang chủ
-          </Link>
-        </div>
       </div>
     </div>
   );

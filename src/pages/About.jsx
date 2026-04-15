@@ -1,9 +1,9 @@
 import React from 'react';
+// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 import { Users, GraduationCap, Code, Coffee, Globe, Link as LinkIcon } from 'lucide-react';
 
 const About = () => {
-  // THÔNG TIN NHÓM
   const teamMembers = [
     { id: 1, name: "Trương Hùng Dũng", mssv: "DH52200541", role: "Frontend 1 (người dùng)" },
     { id: 3, name: "Võ Minh Thông", mssv: "DH52201517", role: "Frontend 2 (admin)" },
@@ -63,7 +63,6 @@ const About = () => {
               </div>
               <p className="text-gray-500 text-sm mb-6 pb-6 border-b border-gray-100 italic">{member.role}</p>
               <div className="flex gap-4 text-gray-300">
-                {/* Thay thế icon Github bằng Globe */}
                 <Globe size={18} className="hover:text-dark cursor-pointer transition" />
                 <Code size={18} className="hover:text-dark cursor-pointer transition" />
                 <LinkIcon size={18} className="hover:text-dark cursor-pointer transition" />

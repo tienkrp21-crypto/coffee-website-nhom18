@@ -6,12 +6,8 @@ const BASE_URL = 'https://coffee-website-nhom18.onrender.com';
 const Register = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    phone: '',
-    password: ''
+    fullName: '', email: '', phone: '', password: ''
   });
-
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };

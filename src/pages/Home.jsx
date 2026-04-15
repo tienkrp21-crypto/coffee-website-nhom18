@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { products } from '../data/products';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 import { Truck, CreditCard, Coffee, Mail, ArrowRight } from 'lucide-react';
 

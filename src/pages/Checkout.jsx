@@ -1,23 +1,19 @@
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { CheckCircle, Loader2 } from 'lucide-react';
 import LoadingPage from '../components/LoadingPage';
 
-// Cập nhật URL Backend mới
 const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
 
 const Checkout = () => {
   const { cartItems, clearCart } = useCart(); 
   const navigate = useNavigate();
   
-  // 1. Quản lý trạng thái Form
+  //Quản lý các input của người dùng bằng 1 Object State duy nhất
   const [formData, setFormData] = useState({
-    fullName: '',
-    phone: '',
-    email: '',
-    address: '',
-    note: ''
+    fullName: '', phone: '', email: '', address: '', note: ''
   });
   const [paymentMethod, setPaymentMethod] = useState('cod');
   const [loading, setLoading] = useState(false);
@@ -25,31 +21,25 @@ const Checkout = () => {
   const totalPrice = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const shippingFee = 30000;
 
-  // 2. Tự động điền thông tin nếu đã đăng nhập 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      // fetch profile ở đây để điền sẵn tên/sđt/email vào form
-    }
-  }, []);
-
+  //Hàm dùng chung để bắt sự kiện người dùng gõ vào form 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    // Dùng Spread Operator (...prev) để giữ nguyên dữ liệu cũ, chỉ đè lên trường đang được gõ.
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // 3. LOGIC GỬI ĐƠN HÀNG LÊN BACKEND
+  //GỬI ĐƠN HÀNG LÊN BACKEND CỦA TIẾN
   const handlePlaceOrder = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); 
     setLoading(true);
 
-    // ĐÃ SỬA TÊN BIẾN ĐỂ KHỚP VỚI BACKEND DTO
+    // Format dữ liệu (DTO) chuẩn xác theo yêu cầu của Backend.
     const orderData = {
       receiverName: formData.fullName,
       receiverPhone: formData.phone,
       shippingAddress: formData.address,
       paymentMethod: paymentMethod === 'vnpay' ? 'VNPAY' : 'COD',
-      userId: 9, // Tạm thời để cứng ID 9 để không bị lỗi Database
+      userId: 9, 
       items: cartItems.map(item => ({
         productId: item.id,
         quantity: item.quantity,
@@ -58,11 +48,11 @@ const Checkout = () => {
     };
 
     try {
-      // ĐÃ SỬA ĐƯỜNG DẪN THÀNH /checkout
       const response = await fetch(`${BASE_URL}/checkout`, { 
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          // Gửi kèm Token từ localStorage để Backend xác thực danh tính người mua.
           'Authorization': `Bearer ${localStorage.getItem('token')}` 
         },
         body: JSON.stringify(orderData),
@@ -70,17 +60,17 @@ const Checkout = () => {
 
       if (response.ok) {
         const result = await response.json();
-        if (clearCart) clearCart(); // Xóa sạch giỏ hàng
-
-        // KIỂM TRA NẾU LÀ VNPAY THÌ CHUYỂN HƯỚNG SANG TRANG THANH TOÁN
+        // Sau khi mua thành công, gọi hàm clearCart để dọn rác giỏ hàng, tránh người dùng mua trùng lặp.
+        if (clearCart) clearCart(); 
+        // LUỒNG ĐIỀU HƯỚNG THANH TOÁN
         if (result.paymentUrl) {
+            // Nếu là VNPay, Backend trả về URL, Frontend ép trình duyệt mở trang VNPay.
             window.location.href = result.paymentUrl;
         } else {
-            // NẾU LÀ TIỀN MẶT COD THÌ QUA TRANG KẾT QUẢ LUÔN
+            // Nếu là COD, chuyển thẳng sang trang Cảm ơn nội bộ, đính kèm orderId qua state ẩn của React Router.
             alert("Đặt hàng thành công! CafeMaterial đang chuẩn bị món cho bạn.");
             navigate('/payment-result', { state: { orderId: result.orderId || result.id } }); 
         }
-
       } else {
         const errorMsg = await response.text();
         alert(`Lỗi đặt hàng: ${errorMsg}`);
@@ -91,7 +81,7 @@ const Checkout = () => {
       setLoading(false);
     }
   };
-
+  // Nếu giỏ trống thì render khung báo rỗng
   if (cartItems.length === 0) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-secondary">
@@ -101,34 +91,29 @@ const Checkout = () => {
     );
   }
 
+  // Hiển thị vòng xoay nếu đang gọi API
   if (loading) return <LoadingPage />;
 
   return (
     <div className="font-sans text-gray-600 bg-white pb-20">
-      {/* HEADER TRANG  */}
       <div className="container-fluid bg-dark p-12 mb-12 flex items-center justify-center relative shadow-lg"
         style={{ backgroundImage: 'linear-gradient(rgba(43, 40, 37, .8), rgba(43, 40, 37, .8)), url("https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=1920")', backgroundSize: 'cover' }}>
         <div className="text-center z-10 py-10">
           <h1 className="text-white font-serif text-6xl mb-4 italic">Thanh toán</h1>
-          <div className="flex items-center justify-center gap-3 text-white font-black uppercase text-xs tracking-widest">
-            <Link to="/cart" className="hover:text-primary transition">Giỏ hàng</Link>
-            <span className="text-primary">■</span>
-            <span className="text-gray-400">Xác nhận đơn hàng</span>
-          </div>
         </div>
       </div>
 
       <div className="container mx-auto px-4 max-w-6xl">
         <form onSubmit={handlePlaceOrder} className="flex flex-col lg:flex-row gap-10">
-          
-          {/* CỘT TRÁI: THÔNG TIN GIAO HÀNG */}
+          /* CỘT TRÁI: THÔNG TIN GIAO HÀNG */
           <div className="w-full lg:w-2/3">
             <div className="bg-secondary p-10 shadow-xl border-t-4 border-primary">
               <h3 className="font-serif text-3xl text-dark mb-8 border-b border-gray-200 pb-4 italic">Thông tin giao hàng</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 tracking-widest">Họ và tên người nhận *</label>
+                  <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 tracking-widest">Họ tên *</label>
+                  /* Cột dữ liệu vào thuộc tính name="fullName" để đồng bộ với state */
                   <input name="fullName" type="text" required value={formData.fullName} onChange={handleInputChange} className="w-full bg-white border border-gray-100 px-4 py-3 focus:border-primary outline-none transition font-serif" placeholder="VD: Trương Hùng Dũng" />
                 </div>
                 <div>
@@ -136,36 +121,21 @@ const Checkout = () => {
                   <input name="phone" type="tel" required value={formData.phone} onChange={handleInputChange} className="w-full bg-white border border-gray-100 px-4 py-3 focus:border-primary outline-none transition" placeholder="09xxxxxxxx" />
                 </div>
               </div>
-
               <div className="mb-6">
-                <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 tracking-widest">Email (Nhận hóa đơn điện tử)</label>
-                <input name="email" type="email" value={formData.email} onChange={handleInputChange} className="w-full bg-white border border-gray-100 px-4 py-3 focus:border-primary outline-none transition font-serif" placeholder="dung100504@gmail.com" />
+                <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 tracking-widest">Địa chỉ giao hàng *</label>
+                <input name="address" type="text" required value={formData.address} onChange={handleInputChange} className="w-full bg-white border border-gray-100 px-4 py-3 focus:border-primary outline-none transition" placeholder="Số nhà, tên đường..." />
               </div>
 
-              <div className="mb-6">
-                <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 tracking-widest">Địa chỉ giao hàng chi tiết *</label>
-                <input name="address" type="text" required value={formData.address} onChange={handleInputChange} className="w-full bg-white border border-gray-100 px-4 py-3 focus:border-primary outline-none transition" placeholder="Số nhà, tên đường, phường, quận..." />
-              </div>
-
-              <div className="mb-10">
-                <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 tracking-widest">Ghi chú (Tùy chọn)</label>
-                <textarea name="note" rows="3" value={formData.note} onChange={handleInputChange} className="w-full bg-white border border-gray-100 px-4 py-3 focus:border-primary outline-none transition" placeholder="Ví dụ: Giao vào giờ hành chính..."></textarea>
-              </div>
-
-              <h3 className="font-serif text-2xl text-dark mb-6 italic">Phương thức thanh toán</h3>
+              <h3 className="font-serif text-2xl text-dark mb-6 mt-8 italic">Phương thức thanh toán</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <PaymentOption id="cod" label="Tiền mặt (COD)" current={paymentMethod} set={setPaymentMethod} />
-                {/* ĐÃ SỬA ID THÀNH vnpay */}
                 <PaymentOption id="vnpay" label="Chuyển khoản VNPay" current={paymentMethod} set={setPaymentMethod} />
               </div>
             </div>
           </div>
-
-          {/* CỘT PHẢI: TÓM TẮT ĐƠN HÀNG */}
           <div className="w-full lg:w-1/3">
             <div className="bg-dark text-white p-8 sticky top-28 shadow-2xl border-b-4 border-primary">
               <h3 className="font-serif text-2xl text-primary mb-6 border-b border-gray-700 pb-4 italic">Đơn hàng của bạn</h3>
-              
               <div className="space-y-4 mb-8 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
                 {cartItems.map((item) => (
                   <div key={item.id} className="flex justify-between items-center border-b border-gray-800 pb-3">
@@ -182,14 +152,6 @@ const Checkout = () => {
               </div>
 
               <div className="space-y-3 mb-8 pt-4 border-t border-gray-700">
-                <div className="flex justify-between text-gray-400 text-xs font-black uppercase tracking-widest">
-                  <span>Tạm tính:</span>
-                  <span className="text-white font-serif text-base">{totalPrice.toLocaleString('vi-VN')}đ</span>
-                </div>
-                <div className="flex justify-between text-gray-400 text-xs font-black uppercase tracking-widest">
-                  <span>Phí giao hàng:</span>
-                  <span className="text-white font-serif text-base">{shippingFee.toLocaleString('vi-VN')}đ</span>
-                </div>
                 <div className="flex justify-between items-center pt-4 border-t border-gray-700">
                   <span className="text-primary font-black uppercase text-sm tracking-widest">Tổng cộng:</span>
                   <span className="text-3xl font-serif text-primary">{(totalPrice + shippingFee).toLocaleString('vi-VN')}đ</span>
@@ -207,6 +169,7 @@ const Checkout = () => {
   );
 };
 
+//Component con dùng để tái sử dụng mã HTML cho phần chọn nút Radio 
 const PaymentOption = ({ id, label, current, set }) => (
   <label className={`flex items-center p-4 border-2 cursor-pointer transition-all ${current === id ? 'border-primary bg-primary/5' : 'border-gray-100 bg-white hover:border-primary/30'}`}>
     <input type="radio" checked={current === id} onChange={() => set(id)} className="mr-3 w-4 h-4 accent-primary" />
