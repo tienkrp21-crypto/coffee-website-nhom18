@@ -1,7 +1,10 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+// Layouts & Context
 import MainLayout from "./layouts/MainLayout";
 import { CartProvider } from "./context/CartContext";
+
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -13,9 +16,11 @@ import Checkout from "./pages/Checkout";
 import PaymentResult from "./pages/PaymentResult";
 import Profile from "./pages/Profile";
 import OrderHistory from "./pages/OrderHistory";
+import About from "./pages/About";
+
+// Các trang khác
 import CoffeeShop from "./CoffeeShop";
 import Users from "./User";
-import About from "./pages/About";
 import AdminApp from "./admin/AdminApp";
 
 function App() {
@@ -23,7 +28,6 @@ function App() {
     <CartProvider>
       <BrowserRouter>
         <Routes>
-          {/* Nhóm các trang dùng chung Header/Footer */}
           <Route path="/" element={<MainLayout />}>
             <Route index element={<Home />} />
             <Route path="about" element={<About />} />
@@ -37,13 +41,18 @@ function App() {
             <Route path="/order-history" element={<OrderHistory />} />
           </Route>
           {/* Các trang không dùng chung Header */}
-          
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          
+          {/* Các trang bổ trợ khác */}
           <Route path="/coffee-shop-info" element={<CoffeeShop />} />
           <Route path="/users-list" element={<Users />} />
+
           <Route path="/admin/*" element={<AdminApp />} />
+          
+          {/* Route dự phòng nếu user nhập bậy link */}
+          <Route path="*" element={<div className="text-center py-20 uppercase font-bold">404 - Không tìm thấy trang này sếp ơi!</div>} />
         </Routes>
       </BrowserRouter>
     </CartProvider>
