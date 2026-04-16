@@ -1,27 +1,31 @@
 import React, { useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom"; // Thêm useNavigate
 import { CheckCircle, Home, ShoppingBag } from "lucide-react";
-import { useCart } from "../context/CartContext"; // 1. Import hook giỏ hàng
+import { useCart } from "../context/CartContext"; 
 
 const PaymentResult = () => {
-  const { clearCart } = useCart(); // 2. Lấy hàm xóa giỏ hàng
+  const { clearCart } = useCart(); 
   const location = useLocation();
+  const navigate = useNavigate(); // Khai báo hook điều hướng
   
-  // LẤY MÃ ĐƠN HÀNG THẬT TỪ CHECKOUT CHUYỂN SANG HOẶC TỪ URL VNPAY
   const queryParams = new URLSearchParams(location.search);
   const vnpResponseCode = queryParams.get("vnp_ResponseCode");
   const orderId = location.state?.orderId || queryParams.get("orderId") || "Đang cập nhật...";
 
   useEffect(() => {
-    // 3. LOGIC QUAN TRỌNG: 
-    // Nếu là đơn COD (có orderId trong state) hoặc VNPay thành công (vnp_ResponseCode === '00')
     const isSuccess = location.state?.orderId || vnpResponseCode === "00";
 
     if (isSuccess) {
-      clearCart(); // CHỐT HẠ: Xóa sạch giỏ hàng khi thanh toán thành công
+      clearCart(); 
       console.log("Đã dọn dẹp giỏ hàng sau khi thanh toán thành công!");
     }
   }, [location, vnpResponseCode, clearCart]);
+
+  // Hàm xử lý quay về trang chủ cưỡng ép
+  const handleGoHome = (e) => {
+    e.preventDefault(); // Chặn hành vi mặc định
+    navigate("/", { replace: true }); // Chuyển hướng và xóa lịch sử URL cũ (VNPay params)
+  };
 
   return (
     <div className="font-sans text-gray-600 bg-white pb-20 min-h-screen">
@@ -36,7 +40,8 @@ const PaymentResult = () => {
         <div className="text-center z-10 py-10">
           <h1 className="display-4 text-uppercase text-white font-heading text-5xl mb-4">Hoàn Tất</h1>
           <div className="flex items-center justify-center gap-3 text-white font-heading text-lg">
-            <Link to="/" className="hover:text-primary transition">Trang chủ</Link>
+            {/* Sử dụng onClick thay vì Link to trực tiếp để đảm bảo điều hướng sạch */}
+            <button onClick={handleGoHome} className="hover:text-primary transition">Trang chủ</button>
             <span className="text-primary">//</span>
             <span>Kết quả thanh toán</span>
           </div>
@@ -76,9 +81,14 @@ const PaymentResult = () => {
             <Link to="/products" className="flex items-center justify-center gap-2 bg-primary text-dark font-heading px-8 py-4 uppercase text-lg hover:bg-white border-inner border-inner-dark transition">
               <ShoppingBag size={20} /> Tiếp tục mua sắm
             </Link>
-            <Link to="/" className="flex items-center justify-center gap-2 bg-dark text-white font-heading px-8 py-4 uppercase text-lg hover:bg-primary border-inner transition">
+            
+            {/* FIX: Đổi thẻ Link thành button điều hướng navigate */}
+            <button 
+                onClick={handleGoHome}
+                className="flex items-center justify-center gap-2 bg-dark text-white font-heading px-8 py-4 uppercase text-lg hover:bg-primary border-inner transition w-full sm:w-auto"
+            >
               <Home size={20} /> Về trang chủ
-            </Link>
+            </button>
           </div>
         </div>
       </div>
