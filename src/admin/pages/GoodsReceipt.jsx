@@ -66,7 +66,7 @@ export default function GoodsReceipt() {
         </h1>
         <button
           onClick={handleAdd}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors"
+          className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded transition-all hover:scale-105 shadow-md"
         >
           + Tạo phiếu nhập
         </button>

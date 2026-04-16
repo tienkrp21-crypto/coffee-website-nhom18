@@ -214,7 +214,7 @@ export default function Inventory() {
                 <td className="px-6 py-4 text-center">
                   <button
                     onClick={() => handleEdit(item)}
-                    className="bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded text-sm transition-colors"
+                    className="bg-orange-500 hover:bg-orange-600 text-white py-1 px-3 rounded text-sm transition-all hover:scale-105 shadow-md"
                   >
                     Cập nhật
                   </button>

@@ -32,12 +32,12 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-md p-8">
+    <div className="min-h-screen bg-gradient-to-br from-orange-500 to-orange-700 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg shadow-2xl w-full max-w-md p-8 border border-orange-200">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">☕</h1>
-          <h2 className="text-2xl font-bold text-gray-800">Đăng nhập Admin</h2>
-          <p className="text-gray-600 mt-2">Quản lý hệ thống Coffee Shop</p>
+          <h1 className="text-4xl font-bold text-orange-800 mb-2">☕</h1>
+          <h2 className="text-2xl font-bold text-orange-800">Đăng nhập Admin</h2>
+          <p className="text-orange-600 mt-2">Quản lý hệ thống Coffee Shop</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
@@ -49,7 +49,7 @@ export default function AdminLogin() {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              className="w-full px-4 py-2 border border-orange-300 rounded-lg focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-colors"
               placeholder="Nhập tên đăng nhập"
             />
           </div>
@@ -62,7 +62,7 @@ export default function AdminLogin() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              className="w-full px-4 py-2 border border-orange-300 rounded-lg focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-colors"
               placeholder="Nhập mật khẩu"
             />
           </div>
@@ -75,14 +75,14 @@ export default function AdminLogin() {
 
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200"
+            className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-lg transition-all hover:scale-105 shadow-md"
           >
             Đăng nhập
           </button>
         </form>
 
-        <div className="mt-6 pt-6 border-t border-gray-200">
-          <p className="text-center text-sm text-gray-600">
+        <div className="mt-6 pt-6 border-t border-orange-200">
+          <p className="text-center text-sm text-orange-600">
             <strong>Demo Account:</strong>
             <br />
             Username: admin

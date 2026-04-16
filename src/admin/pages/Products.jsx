@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import ProductForm from "../components/ProductForm";
 
 const API_BASE =
   "https://coffee-website-nhom18-admin.onrender.com/api/products";
@@ -12,10 +13,11 @@ export default function Products() {
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState({
     sku: "",
     name: "",
-    categoryName: "Cà phê",
+    categoryId: "",
     price: "",
     unit: "hộp",
     stockQuantity: "",
@@ -53,7 +55,7 @@ export default function Products() {
     setFormData({
       sku: "",
       name: "",
-      categoryName: "Cà phê",
+      categoryId: "",
       price: "",
       unit: "hộp",
       stockQuantity: "",
@@ -69,11 +71,12 @@ export default function Products() {
     setFormData({
       sku: product.sku || "",
       name: product.name || "",
-      categoryName: product.categoryName || "Cà phê",
+      categoryId:
+        product.categoryId || product.category_id || product.category?.id || "",
       price: product.price ?? "",
       unit: product.unit || "hộp",
       stockQuantity: product.stockQuantity ?? "",
-      imageUrl: product.imageUrl || "",
+      imageUrl: product.imageUrl || product.image_url || "",
       description: product.description || "",
     });
     setSaveError(null);
@@ -85,9 +88,10 @@ export default function Products() {
       !formData.sku ||
       !formData.name ||
       !formData.price ||
-      !formData.stockQuantity
+      !formData.stockQuantity ||
+      !formData.categoryId
     ) {
-      setSaveError("Vui lòng nhập đầy đủ SKU, tên, giá và tồn kho.");
+      setSaveError("Vui lòng nhập đầy đủ SKU, tên, danh mục, giá và tồn kho.");
       return;
     }
 
@@ -99,11 +103,11 @@ export default function Products() {
       name: formData.name,
       price: Number(formData.price),
       unit: formData.unit,
-      stockQuantity: Number(formData.stockQuantity),
-      imageUrl: formData.imageUrl || null,
+      stock_quantity: Number(formData.stockQuantity),
+      image_url: formData.imageUrl || null,
       description: formData.description,
       status: 1,
-      categoryName: formData.categoryName,
+      category_id: Number(formData.categoryId),
     };
 
     try {
@@ -125,7 +129,7 @@ export default function Products() {
       setFormData({
         sku: "",
         name: "",
-        categoryName: "Cà phê",
+        categoryId: "",
         price: "",
         unit: "hộp",
         stockQuantity: "",
@@ -149,20 +153,33 @@ export default function Products() {
         prevProducts.filter((product) => product.id !== id)
       );
     } catch (error) {
-      console.error("Error deleting product:", error);
+      console.error("Error deleting sản phẩm:", error);
       alert("Không thể xóa sản phẩm. Vui lòng thử lại.");
     }
   };
 
+  const filteredProducts = products.filter((product) => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return true;
+
+    return (
+      product.name?.toLowerCase().includes(term) ||
+      product.sku?.toLowerCase().includes(term) ||
+      product.categoryName?.toLowerCase().includes(term)
+    );
+  });
+
+  const currentProducts = filteredProducts;
+
   return (
-    <div>
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-gray-800">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h1 className="text-2xl sm:text-3xl font-bold text-orange-800">
           ☕ Quản lý Sản phẩm
         </h1>
         <button
           onClick={handleAdd}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors"
+          className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded transition-all hover:scale-105 shadow-md text-sm sm:text-base"
         >
           + Thêm sản phẩm
         </button>
@@ -183,191 +200,134 @@ export default function Products() {
       {!loading && !error && (
         <>
           {showForm && (
-            <div className="bg-white rounded-lg shadow p-6 mb-8">
-              <h2 className="text-xl font-bold text-gray-800 mb-4">
-                {editingId ? "Sửa sản phẩm" : "Thêm sản phẩm mới"}
-              </h2>
-
-              {saveError && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                  <p>{saveError}</p>
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input
-                  type="text"
-                  placeholder="Tên sản phẩm"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                  disabled={saving}
-                />
-                <select
-                  value={formData.categoryName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, categoryName: e.target.value })
-                  }
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                  disabled={saving}
-                >
-                  <option value="Cà phê">Cà phê</option>
-                  <option value="Đồ uống">Đồ uống</option>
-                  <option value="Bánh miếng">Bánh miếng</option>
-                </select>
-                <input
-                  type="text"
-                  placeholder="Mã SKU"
-                  value={formData.sku}
-                  onChange={(e) =>
-                    setFormData({ ...formData, sku: e.target.value })
-                  }
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                  disabled={saving}
-                />
-                <input
-                  type="number"
-                  placeholder="Giá"
-                  value={formData.price}
-                  onChange={(e) =>
-                    setFormData({ ...formData, price: e.target.value })
-                  }
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                  disabled={saving}
-                />
-                <input
-                  type="number"
-                  placeholder="Tồn kho"
-                  value={formData.stockQuantity}
-                  onChange={(e) =>
-                    setFormData({ ...formData, stockQuantity: e.target.value })
-                  }
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                  disabled={saving}
-                />
-              </div>
-              <div className="flex gap-2 mt-4">
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-bold py-2 px-4 rounded transition-colors"
-                >
-                  {saving ? "Đang lưu..." : "Lưu"}
-                </button>
-                <button
-                  onClick={() => setShowForm(false)}
-                  disabled={saving}
-                  className="bg-gray-400 hover:bg-gray-500 disabled:bg-gray-300 text-white font-bold py-2 px-4 rounded transition-colors"
-                >
-                  Hủy
-                </button>
-              </div>
-            </div>
+            <ProductForm
+              showForm={showForm}
+              editingId={editingId}
+              formData={formData}
+              setFormData={setFormData}
+              handleSave={handleSave}
+              setShowForm={setShowForm}
+              saving={saving}
+              saveError={saveError}
+            />
           )}
 
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-gray-100 border-b">
+          <div className="flex flex-col gap-4 mb-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="w-full lg:w-1/2">
+              <input
+                type="text"
+                placeholder="Tìm kiếm sản phẩm..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                }}
+                className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+            <div className="text-xs sm:text-sm text-gray-600">
+              {filteredProducts.length} sản phẩm tìm thấy
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow overflow-x-auto -mx-4 sm:m-0">
+            <table className="w-full text-xs sm:text-sm">
+              <thead className="bg-gray-100 border-b sticky top-0">
                 <tr>
-                  <th className="px-6 py-3 text-left font-semibold text-gray-700">
+                  <th className="px-3 sm:px-6 py-3 text-left font-semibold text-gray-700">
                     Tên sản phẩm
                   </th>
-                  <th className="px-6 py-3 text-left font-semibold text-gray-700">
+                  <th className="px-3 sm:px-6 py-3 text-left font-semibold text-gray-700 hidden sm:table-cell">
                     Danh mục
                   </th>
-                  <th className="px-6 py-3 text-left font-semibold text-gray-700">
+                  <th className="px-3 sm:px-6 py-3 text-left font-semibold text-gray-700 hidden md:table-cell">
                     Đơn vị
                   </th>
-                  <th className="px-6 py-3 text-right font-semibold text-gray-700">
+                  <th className="px-3 sm:px-6 py-3 text-right font-semibold text-gray-700">
                     Giá
                   </th>
-                  <th className="px-6 py-3 text-center font-semibold text-gray-700">
+                  <th className="px-3 sm:px-6 py-3 text-center font-semibold text-gray-700 hidden md:table-cell">
                     Tồn kho
                   </th>
-                  <th className="px-6 py-3 text-center font-semibold text-gray-700">
+                  <th className="px-3 sm:px-6 py-3 text-center font-semibold text-gray-700">
                     Hành động
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {products.length === 0 ? (
+                {currentProducts.length === 0 ? (
                   <tr>
                     <td
                       colSpan="6"
-                      className="px-6 py-8 text-center text-gray-500"
+                      className="px-3 sm:px-6 py-8 text-center text-gray-500 text-xs sm:text-sm"
                     >
-                      Không có sản phẩm nào.
+                      Không tìm thấy sản phẩm phù hợp.
                     </td>
                   </tr>
                 ) : (
-                  products.map((product) => (
+                  currentProducts.map((product) => (
                     <tr key={product.id} className="border-b hover:bg-gray-50">
-                      <td className="px-6 py-4">
+                      <td className="px-3 sm:px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <span className="text-2xl">
+                          <span className="text-lg">
                             {product.imageUrl ? (
                               <img
                                 src={product.imageUrl}
                                 alt={product.name}
-                                className="w-10 h-10 object-cover rounded"
+                                className="w-8 h-8 sm:w-10 sm:h-10 object-cover rounded"
                               />
                             ) : (
                               "☕"
                             )}
                           </span>
-                          <div>
-                            <div className="font-semibold text-gray-800">
+                          <div className="min-w-0">
+                            <div className="font-semibold text-gray-800 text-xs sm:text-sm truncate">
                               {product.name}
                             </div>
-                            <div className="text-xs text-gray-500">
-                              {product.sku}
+                            <div className="text-xs text-gray-500 sm:hidden">
+                              {product.categoryName}
                             </div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-gray-600">
-                        {product.categoryName || "Chưa có"}
+                      <td className="px-3 sm:px-6 py-4 text-gray-700 hidden sm:table-cell text-xs sm:text-sm">
+                        {product.categoryName}
                       </td>
-                      <td className="px-6 py-4 text-gray-600">
-                        {product.unit || "-"}
+                      <td className="px-3 sm:px-6 py-4 text-gray-700 hidden md:table-cell text-xs sm:text-sm">
+                        {product.unit}
                       </td>
-                      <td className="px-6 py-4 text-right font-semibold text-gray-800">
-                        {(product.price || 0).toLocaleString()}đ
+                      <td className="px-3 sm:px-6 py-4 text-right font-semibold text-gray-800 text-xs sm:text-sm">
+                        {product.price.toLocaleString()}đ
                       </td>
-                      <td className="px-6 py-4 text-center">
-                        <span
-                          className={`px-3 py-1 rounded font-semibold ${
-                            product.stockQuantity > 20
-                              ? "bg-green-100 text-green-700"
-                              : product.stockQuantity > 5
-                              ? "bg-yellow-100 text-yellow-700"
-                              : "bg-red-100 text-red-700"
-                          }`}
-                        >
-                          {product.stockQuantity ?? 0}
-                        </span>
+                      <td className="px-3 sm:px-6 py-4 text-center text-gray-700 hidden md:table-cell text-xs sm:text-sm">
+                        {product.stockQuantity}
                       </td>
-                      <td className="px-6 py-4 text-center">
-                        <button
-                          onClick={() => handleEdit(product)}
-                          className="bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded text-sm mr-2 transition-colors"
-                        >
-                          Sửa
-                        </button>
-                        <button
-                          onClick={() => handleDelete(product.id)}
-                          className="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded text-sm transition-colors"
-                        >
-                          Xóa
-                        </button>
+                      <td className="px-3 sm:px-6 py-4">
+                        <div className="flex gap-1 sm:gap-2 justify-center flex-wrap">
+                          <button
+                            onClick={() => handleEdit(product)}
+                            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-2 sm:py-2 sm:px-3 rounded text-xs sm:text-sm transition"
+                          >
+                            Sửa
+                          </button>
+                          <button
+                            onClick={() => handleDelete(product.id)}
+                            className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-2 sm:py-2 sm:px-3 rounded text-xs sm:text-sm transition"
+                          >
+                            Xóa
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
                 )}
               </tbody>
             </table>
+          </div>
+
+          <div className="flex flex-col gap-3 border-t border-gray-100 px-3 sm:px-6 py-4">
+            <div className="text-xs sm:text-sm text-gray-600">
+              Hiển thị {currentProducts.length} sản phẩm
+            </div>
           </div>
         </>
       )}

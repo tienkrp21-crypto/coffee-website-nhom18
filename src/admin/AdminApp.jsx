@@ -7,11 +7,8 @@ import AdminIndex from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Categories from "./pages/Categories";
 import Products from "./pages/Products";
-import Inventory from "./pages/Inventory";
-import GoodsReceipt from "./pages/GoodsReceipt";
 import Orders from "./pages/Orders";
 import Users from "./pages/Users";
-import Settings from "./pages/Settings";
 
 function AdminApp() {
   return (
@@ -26,11 +23,8 @@ function AdminApp() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="categories" element={<Categories />} />
           <Route path="products" element={<Products />} />
-          <Route path="inventory" element={<Inventory />} />
-          <Route path="goods-receipt" element={<GoodsReceipt />} />
           <Route path="orders" element={<Orders />} />
           <Route path="users" element={<Users />} />
-          <Route path="settings" element={<Settings />} />
         </Route>
 
         {/* Catch all - redirect to admin home */}
