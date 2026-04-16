@@ -1,18 +1,21 @@
 import React, { useEffect } from "react";
-import { useNavigate, useLocation, Link } from "react-router-dom"; // Thêm useNavigate
+import { useLocation } from "react-router-dom"; // Đã bỏ Link và useNavigate đi cho đỡ lỗi
 import { CheckCircle, Home, ShoppingBag } from "lucide-react";
 import { useCart } from "../context/CartContext"; 
 
 const PaymentResult = () => {
   const { clearCart } = useCart(); 
   const location = useLocation();
-  const navigate = useNavigate(); // Khai báo hook điều hướng
   
+  // LẤY MÃ ĐƠN HÀNG TỪ VNPAY HOẶC TRẠNG THÁI TRƯỚC ĐÓ
   const queryParams = new URLSearchParams(location.search);
   const vnpResponseCode = queryParams.get("vnp_ResponseCode");
-  const orderId = location.state?.orderId || queryParams.get("orderId") || "Đang cập nhật...";
+  
+  // Hỗ trợ lấy mã đơn hàng từ nhiều nguồn khác nhau để đảm bảo luôn hiện số
+  const orderId = location.state?.orderId || queryParams.get("orderId") || queryParams.get("vnp_TxnRef") || "Đang cập nhật...";
 
   useEffect(() => {
+    // Nếu là đơn COD (có orderId) hoặc VNPay thành công (vnp_ResponseCode === '00')
     const isSuccess = location.state?.orderId || vnpResponseCode === "00";
 
     if (isSuccess) {
@@ -20,12 +23,6 @@ const PaymentResult = () => {
       console.log("Đã dọn dẹp giỏ hàng sau khi thanh toán thành công!");
     }
   }, [location, vnpResponseCode, clearCart]);
-
-  // Hàm xử lý quay về trang chủ cưỡng ép
-  const handleGoHome = (e) => {
-    e.preventDefault(); // Chặn hành vi mặc định
-    navigate("/", { replace: true }); // Chuyển hướng và xóa lịch sử URL cũ (VNPay params)
-  };
 
   return (
     <div className="font-sans text-gray-600 bg-white pb-20 min-h-screen">
@@ -40,8 +37,8 @@ const PaymentResult = () => {
         <div className="text-center z-10 py-10">
           <h1 className="display-4 text-uppercase text-white font-heading text-5xl mb-4">Hoàn Tất</h1>
           <div className="flex items-center justify-center gap-3 text-white font-heading text-lg">
-            {/* Sử dụng onClick thay vì Link to trực tiếp để đảm bảo điều hướng sạch */}
-            <button onClick={handleGoHome} className="hover:text-primary transition">Trang chủ</button>
+            {/* Dùng thẻ a href thay vì Link để ép load lại trang */}
+            <a href="/" className="hover:text-primary transition">Trang chủ</a>
             <span className="text-primary">//</span>
             <span>Kết quả thanh toán</span>
           </div>
@@ -78,22 +75,28 @@ const PaymentResult = () => {
           </div>
 
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Link to="/products" className="flex items-center justify-center gap-2 bg-primary text-dark font-heading px-8 py-4 uppercase text-lg hover:bg-white border-inner border-inner-dark transition">
-              <ShoppingBag size={20} /> Tiếp tục mua sắm
-            </Link>
             
-            {/* FIX: Đổi thẻ Link thành button điều hướng navigate */}
+            {/* NÚT TIẾP TỤC MUA SẮM - Ép tải lại trang Products */}
             <button 
-                onClick={handleGoHome}
-                className="flex items-center justify-center gap-2 bg-dark text-white font-heading px-8 py-4 uppercase text-lg hover:bg-primary border-inner transition w-full sm:w-auto"
+                onClick={() => window.location.href = "/products"}
+                className="flex items-center justify-center gap-2 bg-primary text-dark font-heading px-8 py-4 uppercase text-lg hover:bg-white border-inner border-inner-dark transition w-full sm:w-auto cursor-pointer"
+            >
+              <ShoppingBag size={20} /> Tiếp tục mua sắm
+            </button>
+            
+            {/* NÚT VỀ TRANG CHỦ - Ép tải lại trang chủ sạch sẽ */}
+            <button 
+                onClick={() => window.location.href = "/"}
+                className="flex items-center justify-center gap-2 bg-dark text-white font-heading px-8 py-4 uppercase text-lg hover:bg-primary border-inner transition w-full sm:w-auto cursor-pointer"
             >
               <Home size={20} /> Về trang chủ
             </button>
+
           </div>
         </div>
       </div>
     </div>
   );
 };
-// Đánh thức Vercel - Nhóm 18 STU chốt hạ bản fix lan 4
+
 export default PaymentResult;
