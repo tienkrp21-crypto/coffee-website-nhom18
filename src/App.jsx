@@ -41,7 +41,9 @@ function App() {
             <Route path="checkout" element={<Checkout />} />
             <Route path="payment-result" element={<PaymentResult />} />
             <Route path="profile" element={<Profile />} />
-            <Route path="orders" element={<OrderHistory />} />
+            
+            {/* Đã sửa path="orders" thành path="order-history" để khớp với nút bấm trong Profile */}
+            <Route path="order-history" element={<OrderHistory />} />
           </Route>
 
           {/* NHÓM 2: Các trang độc lập (Không Header/Footer của khách)

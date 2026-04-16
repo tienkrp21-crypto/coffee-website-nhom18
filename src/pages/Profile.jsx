@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Phone, Edit2, Save, LogOut, ArrowLeft } from 'lucide-react';
+import { User, Mail, Phone, Edit2, Save, LogOut, ArrowLeft, Package } from 'lucide-react'; // Thêm Package icon
 import LoadingPage from '../components/LoadingPage'; 
+
 const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
+
 const Profile = () => {
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
@@ -10,30 +12,25 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 1. Lấy dữ liệu user đã lưu ở localStorage khi Login thành công
     const savedUser = localStorage.getItem('user');
     
     if (!savedUser) {
-      // Nếu chưa đăng nhập thì đá về trang Login ngay
       navigate('/login');
       return;
     }
 
     try {
-      // 2. Chuyển chuỗi JSON thành Object để hiển thị lên giao diện
       const user = JSON.parse(savedUser);
       setUserData(user);
     } catch (error) {
       console.error("Lỗi đọc dữ liệu user:", error);
       navigate('/login');
     } finally {
-      // Hiệu ứng loading cho chuyên nghiệp
       setTimeout(() => setLoading(false), 800);
     }
   }, [navigate]);
 
   const handleLogout = () => {
-    // Xóa sạch dữ liệu để đăng xuất
     localStorage.removeItem('user');
     alert('Đăng xuất thành công! Hẹn gặp lại bạn tại CafeMaterial.');
     navigate('/');
@@ -52,14 +49,22 @@ const Profile = () => {
         <div className="bg-white border-2 border-[#2B2825]/10 shadow-2xl overflow-hidden">
           <div className="flex flex-col md:flex-row">
             
-            {/* Cột bên trái: Avatar & Logout */}
+            {/* Cột bên trái: Avatar & Điều hướng */}
             <div className="md:w-1/3 bg-[#2B2825] p-12 text-center text-white flex flex-col justify-between">
               <div>
                 <div className="w-32 h-32 bg-[#E88F2A] rounded-full mx-auto mb-6 flex items-center justify-center border-4 border-white/20">
                   <User size={64} className="text-white" />
                 </div>
                 <h2 className="font-serif text-2xl uppercase tracking-wider mb-2">{userData?.fullName || 'Khách hàng'}</h2>
-                <p className="text-[#E88F2A] text-[10px] font-black uppercase tracking-[0.2em]">Thành viên CoffeeMaterial</p>
+                <p className="text-[#E88F2A] text-[10px] font-black uppercase tracking-[0.2em] mb-8">Thành viên CoffeeMaterial</p>
+                
+                {/* NÚT XEM LỊCH SỬ ĐƠN HÀNG - MỚI THÊM */}
+                <button 
+                  onClick={() => navigate('/order-history')}
+                  className="w-full mb-4 flex items-center justify-center gap-2 bg-[#E88F2A] text-white py-3 px-6 hover:bg-white hover:text-[#E88F2A] transition-all text-[10px] font-bold uppercase tracking-widest border border-[#E88F2A]"
+                >
+                  <Package size={16} /> Lịch sử đơn hàng
+                </button>
               </div>
 
               <button 
@@ -102,7 +107,6 @@ const Profile = () => {
   );
 };
 
-// Component con để hiển thị từng dòng thông tin
 const ProfileItem = ({ icon, label, value, isEditing }) => (
   <div className="border-b border-gray-100 pb-4">
     <label className="flex items-center gap-2 text-[10px] font-black text-[#E88F2A] mb-2 uppercase tracking-widest">
