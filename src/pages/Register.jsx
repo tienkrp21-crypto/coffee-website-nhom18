@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
+// Đảm bảo BASE_URL này khớp với link Render của sếp
 const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
 
 const Register = () => {
@@ -24,6 +25,8 @@ const Register = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       });
+
+      // FIX: Xử lý phản hồi dựa trên trạng thái HTTP
       if (response.ok) {
         alert("Chúc mừng! Đăng ký tài khoản thành công. Giờ ông có thể đăng nhập rồi đó!");
         navigate('/login');
