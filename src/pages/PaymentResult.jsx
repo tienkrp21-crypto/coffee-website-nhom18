@@ -1,9 +1,11 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React from "react";
+import { Link, useLocation } from "react-router-dom";
 import { CheckCircle, Home, ShoppingBag } from "lucide-react";
 
 const PaymentResult = () => {
-  const [orderId] = useState(() => Math.floor(Math.random() * 1000000));
+  const location = useLocation();
+  // LẤY MÃ ĐƠN HÀNG THẬT TỪ CHECKOUT CHUYỂN SANG
+  const orderId = location.state?.orderId || "Đang cập nhật...";
 
   return (
     <div className="font-sans text-gray-600 bg-white pb-20 min-h-screen">
@@ -38,7 +40,7 @@ const PaymentResult = () => {
           <div className="p-6 bg-white border border-gray-200 mb-10 inline-block text-left max-w-lg w-full shadow-inner">
             <h4 className="font-heading text-xl text-dark mb-3 border-b pb-2 uppercase">Thông tin giao hàng</h4>
             <ul className="text-sm text-gray-600 space-y-3">
-              <li className="flex gap-2"><span className="text-primary font-bold">•</span>Hóa đơn chi tiết đã được gửi vào email của bạn.</li>
+              <li className="flex gap-2"><span className="text-primary font-bold">•</span>Hóa đơn chi tiết đã được lưu vào Lịch sử mua hàng của bạn.</li>
               <li className="flex gap-2"><span className="text-primary font-bold">•</span>Đơn hàng sẽ được đóng gói và giao đến bạn trong vòng 2-4 ngày làm việc.</li>
               <li className="flex gap-2"><span className="text-primary font-bold">•</span>Nhân viên cửa hàng sẽ gọi điện xác nhận trước khi giao hàng.</li>
             </ul>

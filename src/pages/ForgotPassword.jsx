@@ -43,7 +43,6 @@ const ForgotPassword = () => {
       } else {
         alert(message || "Email này chưa đăng ký!");
       }
-    // eslint-disable-next-line no-unused-vars
     } catch (error) {
       alert("Không kết nối được với máy chủ Render!");
     } finally {
@@ -76,7 +75,6 @@ const ForgotPassword = () => {
       } else {
         alert(message || "Mã OTP không đúng hoặc hết hạn!");
       }
-    // eslint-disable-next-line no-unused-vars
     } catch (error) {
       alert("Lỗi hệ thống khi đổi mật khẩu!");
     } finally {

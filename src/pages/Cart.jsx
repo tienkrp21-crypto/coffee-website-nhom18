@@ -3,6 +3,9 @@ import { useCart } from '../context/CartContext';
 import { Trash2, ChevronLeft, ShoppingBag } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+// Đã thêm BASE_URL để nối link ảnh từ Backend
+const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
+
 const Cart = () => {
   // Lấy dữ liệu và hàm xử lý từ CartContext 
   const { cartItems, addToCart, removeFromCart } = useCart();
@@ -52,7 +55,15 @@ const Cart = () => {
                 <div className="space-y-6">
                   {cartItems.map((item) => (
                     <div key={item.id} className="flex flex-col sm:flex-row items-center gap-4 bg-white p-4 border border-gray-100 shadow-sm relative group">
-                      <img src={item.image} alt={item.name} className="w-24 h-24 object-cover border-inner border-inner-dark" />
+                      
+                      {/* ĐÃ FIX LỖI ẢNH TẠI ĐÂY */}
+                      <img 
+                        src={item.image?.startsWith("http") ? item.image : `${BASE_URL}/${item.image?.replace(/^\//, "")}`} 
+                        alt={item.name} 
+                        className="w-24 h-24 object-cover border-inner border-inner-dark" 
+                        onError={(e) => { e.target.src = "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?q=80&w=400"; }}
+                      />
+                      
                       <div className="flex-1 text-center sm:text-left">
                         <Link to={`/product/${item.id}`}>
                           <h4 className="font-heading text-lg text-dark uppercase hover:text-primary transition">{item.name}</h4>

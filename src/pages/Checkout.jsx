@@ -11,7 +11,6 @@ const Checkout = () => {
   const { cartItems, clearCart } = useCart(); 
   const navigate = useNavigate();
   
-  //Quản lý các input của người dùng bằng 1 Object State duy nhất
   const [formData, setFormData] = useState({
     fullName: '', phone: '', email: '', address: '', note: ''
   });
@@ -19,27 +18,35 @@ const Checkout = () => {
   const [loading, setLoading] = useState(false);
 
   const totalPrice = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shippingFee = 30000;
+  const shippingFee = 30000; // Phí ship mặc định, sếp có thể đổi
 
-  //Hàm dùng chung để bắt sự kiện người dùng gõ vào form 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    // Dùng Spread Operator (...prev) để giữ nguyên dữ liệu cũ, chỉ đè lên trường đang được gõ.
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  //GỬI ĐƠN HÀNG LÊN BACKEND CỦA TIẾN
   const handlePlaceOrder = async (e) => {
     e.preventDefault(); 
     setLoading(true);
 
-    // Format dữ liệu (DTO) chuẩn xác theo yêu cầu của Backend.
+    // Lấy ID người dùng ĐỘNG từ LocalStorage
+    const savedUser = localStorage.getItem('user');
+    if (!savedUser) {
+        alert("Sếp ơi, sếp phải đăng nhập mới đặt hàng được nhé!");
+        setLoading(false);
+        navigate('/login');
+        return;
+    }
+    const userObj = JSON.parse(savedUser);
+    const currentUserId = userObj.id; 
+
+    // Format dữ liệu DTO gửi cho Backend
     const orderData = {
       receiverName: formData.fullName,
       receiverPhone: formData.phone,
       shippingAddress: formData.address,
       paymentMethod: paymentMethod === 'vnpay' ? 'VNPAY' : 'COD',
-      userId: 9, 
+      userId: currentUserId, 
       items: cartItems.map(item => ({
         productId: item.id,
         quantity: item.quantity,
@@ -51,23 +58,21 @@ const Checkout = () => {
       const response = await fetch(`${BASE_URL}/checkout`, { 
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          // Gửi kèm Token từ localStorage để Backend xác thực danh tính người mua.
-          'Authorization': `Bearer ${localStorage.getItem('token')}` 
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(orderData),
       });
 
       if (response.ok) {
         const result = await response.json();
-        // Sau khi mua thành công, gọi hàm clearCart để dọn rác giỏ hàng, tránh người dùng mua trùng lặp.
-        if (clearCart) clearCart(); 
+        
         // LUỒNG ĐIỀU HƯỚNG THANH TOÁN
         if (result.paymentUrl) {
-            // Nếu là VNPay, Backend trả về URL, Frontend ép trình duyệt mở trang VNPay.
+            // Nếu là VNPay, chuyển hướng sang trang của VNPay (Chưa xóa giỏ hàng vội)
             window.location.href = result.paymentUrl;
         } else {
-            // Nếu là COD, chuyển thẳng sang trang Cảm ơn nội bộ, đính kèm orderId qua state ẩn của React Router.
+            // Nếu là COD, đặt thành công -> Xóa giỏ hàng -> Chuyển sang Cảm ơn
+            if (clearCart) clearCart(); 
             alert("Đặt hàng thành công! CafeMaterial đang chuẩn bị món cho bạn.");
             navigate('/payment-result', { state: { orderId: result.orderId || result.id } }); 
         }
@@ -76,12 +81,13 @@ const Checkout = () => {
         alert(`Lỗi đặt hàng: ${errorMsg}`);
       }
     } catch (error) {
-      alert("Không thể kết nối với server thanh toán, vui lòng kiểm tra lại!");
+      console.error(error); 
+      alert("Lỗi mạng: Không thể kết nối với server thanh toán, vui lòng kiểm tra lại!");
     } finally {
       setLoading(false);
     }
   };
-  // Nếu giỏ trống thì render khung báo rỗng
+
   if (cartItems.length === 0) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-secondary">
@@ -91,7 +97,6 @@ const Checkout = () => {
     );
   }
 
-  // Hiển thị vòng xoay nếu đang gọi API
   if (loading) return <LoadingPage />;
 
   return (
@@ -105,7 +110,6 @@ const Checkout = () => {
 
       <div className="container mx-auto px-4 max-w-6xl">
         <form onSubmit={handlePlaceOrder} className="flex flex-col lg:flex-row gap-10">
-          /* CỘT TRÁI: THÔNG TIN GIAO HÀNG */
           <div className="w-full lg:w-2/3">
             <div className="bg-secondary p-10 shadow-xl border-t-4 border-primary">
               <h3 className="font-serif text-3xl text-dark mb-8 border-b border-gray-200 pb-4 italic">Thông tin giao hàng</h3>
@@ -113,7 +117,6 @@ const Checkout = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
                   <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 tracking-widest">Họ tên *</label>
-                  /* Cột dữ liệu vào thuộc tính name="fullName" để đồng bộ với state */
                   <input name="fullName" type="text" required value={formData.fullName} onChange={handleInputChange} className="w-full bg-white border border-gray-100 px-4 py-3 focus:border-primary outline-none transition font-serif" placeholder="VD: Trương Hùng Dũng" />
                 </div>
                 <div>
@@ -133,6 +136,8 @@ const Checkout = () => {
               </div>
             </div>
           </div>
+          
+          {/* CỘT PHẢI: TÓM TẮT ĐƠN HÀNG */}
           <div className="w-full lg:w-1/3">
             <div className="bg-dark text-white p-8 sticky top-28 shadow-2xl border-b-4 border-primary">
               <h3 className="font-serif text-2xl text-primary mb-6 border-b border-gray-700 pb-4 italic">Đơn hàng của bạn</h3>
@@ -140,7 +145,15 @@ const Checkout = () => {
                 {cartItems.map((item) => (
                   <div key={item.id} className="flex justify-between items-center border-b border-gray-800 pb-3">
                     <div className="flex gap-3 items-center">
-                      <img src={item.image} alt={item.name} className="w-12 h-12 object-cover rounded-sm" />
+                      
+                      {/* 🛠 ĐÃ FIX: Logic hiển thị ảnh xịn sò */}
+                      <img 
+                        src={item.image?.startsWith("http") ? item.image : `${BASE_URL}/${item.image?.replace(/^\//, "")}`} 
+                        alt={item.name} 
+                        className="w-12 h-12 object-cover rounded-sm border border-gray-700" 
+                        onError={(e) => { e.target.src = "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?q=80&w=400"; }}
+                      />
+
                       <div>
                         <p className="font-serif text-sm line-clamp-1">{item.name}</p>
                         <p className="text-gray-500 text-[10px] uppercase font-bold tracking-widest">SL: {item.quantity}</p>
@@ -169,7 +182,6 @@ const Checkout = () => {
   );
 };
 
-//Component con dùng để tái sử dụng mã HTML cho phần chọn nút Radio 
 const PaymentOption = ({ id, label, current, set }) => (
   <label className={`flex items-center p-4 border-2 cursor-pointer transition-all ${current === id ? 'border-primary bg-primary/5' : 'border-gray-100 bg-white hover:border-primary/30'}`}>
     <input type="radio" checked={current === id} onChange={() => set(id)} className="mr-3 w-4 h-4 accent-primary" />

@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import MainLayout from "./layouts/MainLayout";
 import { CartProvider } from "./context/CartContext";
 
+// Pages (Đảm bảo đường dẫn import này đúng với cấu trúc thư mục của các ông)
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -28,6 +29,9 @@ function App() {
     <CartProvider>
       <BrowserRouter>
         <Routes>
+          {/* NHÓM 1: Các trang dùng chung Header/Footer (MainLayout)
+              Lưu ý: Trang Profile giờ đã nằm trong này để có Header đẹp 
+          */}
           <Route path="/" element={<MainLayout />}>
             <Route index element={<Home />} />
             <Route path="about" element={<About />} />
@@ -38,9 +42,10 @@ function App() {
             <Route path="payment-result" element={<PaymentResult />} />
             <Route path="profile" element={<Profile />} />
             <Route path="orders" element={<OrderHistory />} />
-            <Route path="/order-history" element={<OrderHistory />} />
           </Route>
-          {/* Các trang không dùng chung Header */}
+
+          {/* NHÓM 2: Các trang độc lập (Không Header/Footer của khách)
+          */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -48,7 +53,9 @@ function App() {
           {/* Các trang bổ trợ khác */}
           <Route path="/coffee-shop-info" element={<CoffeeShop />} />
           <Route path="/users-list" element={<Users />} />
-
+          
+          {/* NHÓM 3: Hệ thống Admin (Quản lý) 
+          */}
           <Route path="/admin/*" element={<AdminApp />} />
           
           {/* Route dự phòng nếu user nhập bậy link */}

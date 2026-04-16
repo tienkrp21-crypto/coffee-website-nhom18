@@ -25,15 +25,22 @@ export const CartProvider = ({ children }) => {
     });
   };
 
-  // Mình viết nốt logic xóa sản phẩm cho Dũng luôn nè
+  // Logic xóa 1 sản phẩm
   const removeFromCart = (id) => {
     setCartItems((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  // FIX LỖI: Thêm hàm dọn sạch giỏ hàng (Dùng khi đặt hàng xong)
+  const clearCart = () => {
+    setCartItems([]);
+    localStorage.removeItem('cart'); // Xóa luôn rác trong bộ nhớ máy
   };
 
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, cartCount }}>
+    // Nhớ cấp quyền cho clearCart được gọi ở các file khác
+    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, clearCart, cartCount }}>
       {children}
     </CartContext.Provider>
   );

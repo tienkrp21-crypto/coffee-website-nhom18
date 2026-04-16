@@ -14,17 +14,19 @@ import { useCart } from "../context/CartContext";
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 
-const BASE_URL = "https://coffee-website-nhom18.onrender.com";
+const BASE_URL = "https://coffee-website-nhom18-1.onrender.com";
 
 const MainLayout = () => {
   const { cartCount } = useCart() || { cartCount: 0 };
-  const location = useLocation(); // ĐÃ SỬA: Bỏ đoạn lặp lại gây lỗi build
+  const location = useLocation(); 
   const navigate = useNavigate();
 
   // 1. Quản lý trạng thái Modal
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
-  const token = localStorage.getItem("token");
+  
+  // Lấy thông tin user
+  const savedUser = localStorage.getItem("user");
 
   // State cho Đăng nhập
   const [loginEmail, setLoginEmail] = useState("");
@@ -40,7 +42,7 @@ const MainLayout = () => {
 
   const isActive = (path) => location.pathname === path;
 
-  // --- LOGIC ĐĂNG NHẬP ---
+  // --- LOGIC ĐĂNG NHẬP ĐÃ FIX LỆCH PHA DỮ LIỆU ---
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoadingLogin(true);
@@ -50,16 +52,20 @@ const MainLayout = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: loginEmail, password: loginPassword }),
       });
-      const result = await response.text();
+      
+      // ĐÃ SỬA: Lấy nguyên bản text từ Backend trả về để giống 100% với trang Login riêng
+      const result = await response.text(); 
+      
       if (response.ok) {
-        localStorage.setItem("token", result);
+        // ĐÃ SỬA: Lưu thẳng chuỗi vào bộ nhớ, không qua bước JSON.stringify để tránh bị lỗi parse ở Profile
+        localStorage.setItem("user", result);
+        
         alert("Đăng nhập thành công!");
         setIsLoginOpen(false);
         window.location.reload();
       } else {
         alert(result || "Sai email hoặc mật khẩu!");
       }
-      // eslint-disable-next-line no-unused-vars
     } catch (error) {
       alert("Lỗi kết nối đến máy chủ!");
     } finally {
@@ -82,7 +88,9 @@ const MainLayout = () => {
           password: regPassword,
         }),
       });
+      
       const result = await response.text();
+      
       if (response.ok) {
         alert("Đăng ký thành công! Bạn có thể đăng nhập ngay.");
         setIsRegisterOpen(false);
@@ -90,7 +98,6 @@ const MainLayout = () => {
       } else {
         alert(result || "Đăng ký không thành công!");
       }
-      // eslint-disable-next-line no-unused-vars
     } catch (error) {
       alert("Lỗi hệ thống khi đăng ký!");
     } finally {
@@ -150,14 +157,14 @@ const MainLayout = () => {
             <button
               type="button"
               onClick={() =>
-                token ? navigate("/profile") : setIsLoginOpen(true)
+                savedUser ? navigate("/profile") : setIsLoginOpen(true)
               }
               className={`flex items-center gap-2 font-black uppercase text-xs tracking-widest transition-all duration-300
                 ${isActive("/profile") ? "text-primary" : "text-white hover:text-primary"}`}
             >
               <User size={20} />
               <span className="hidden sm:inline">
-                {token ? "Cá nhân" : "Tài khoản"}
+                {savedUser ? "Cá nhân" : "Tài khoản"}
               </span>
             </button>
 
