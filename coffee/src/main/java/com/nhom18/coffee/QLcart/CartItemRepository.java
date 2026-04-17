@@ -1,6 +1,5 @@
 package com.nhom18.coffee.QLcart;
 
-import com.nhom18.coffee.QLcart.CartItem;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

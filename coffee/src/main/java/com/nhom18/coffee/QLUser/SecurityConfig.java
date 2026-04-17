@@ -30,7 +30,8 @@ public class SecurityConfig {
                     "/checkout/**",    
                     "/products/**",    
                     "/categories/**",  
-                    "/orders/**",      // Thêm cái này để xem và hủy Lịch sử đơn hàng
+                    "/orders/**", 
+                    "/cart/**",     // Thêm cái này để xem và hủy Lịch sử đơn hàng
                     "/error"
                 ).permitAll()
                 .anyRequest().authenticated() 

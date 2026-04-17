@@ -1,6 +1,5 @@
 package com.nhom18.coffee.QLcart;
 
-import com.nhom18.coffee.QLcart.CartItem;
 import com.nhom18.coffee.QLproducts.Product;
 import com.nhom18.coffee.QLproducts.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
