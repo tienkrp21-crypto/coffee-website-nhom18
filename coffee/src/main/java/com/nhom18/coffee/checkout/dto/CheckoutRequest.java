@@ -1,6 +1,5 @@
 package com.nhom18.coffee.checkout.dto;
 
-import java.util.List;
 
 public class CheckoutRequest {
     private Integer userId;
