@@ -35,30 +35,13 @@ const OrderHistory = () => {
 
     fetchOrders();
   }, [navigate]);
-
-  // HÀM HỦY ĐƠN HÀNG
-  const handleCancelOrder = async (orderId) => {
-    if (!window.confirm("Bạn có chắc chắn muốn hủy đơn hàng này không?")) return;
-    
-    try {
-      const response = await fetch(`${BASE_URL}/orders/${orderId}/cancel`, {
-        method: 'PUT'
-      });
-      const msg = await response.text();
-      
-      if (response.ok) {
-        alert(msg);
-        window.location.reload(); // Tải lại trang để thấy đơn đã bị hủy
-      } else {
-        alert(msg);
-      }
-    // eslint-disable-next-line no-unused-vars
-    } catch (error) {
-      alert("Lỗi kết nối khi hủy đơn!");
-    }
-  };
-
-  if (loading) return <LoadingPage />;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <Loader2 className="animate-spin text-primary" size={48} />
+      </div>
+    );
+  }
 
   return (
     <div className="py-12 bg-white min-h-screen">
@@ -120,6 +103,7 @@ const OrderHistory = () => {
                   {/* Chỉ hiện nút HỦY ĐƠN nếu trạng thái đang là PENDING */}
                   {order.orderStatus === 'PENDING' && (
                     <button 
+                      // eslint-disable-next-line no-undef
                       onClick={() => handleCancelOrder(order.orderId)}
                       className="mt-4 md:mt-0 flex items-center gap-2 bg-red-50 text-red-600 px-6 py-2 uppercase text-xs font-bold tracking-widest border border-red-200 hover:bg-red-600 hover:text-white transition-all"
                     >

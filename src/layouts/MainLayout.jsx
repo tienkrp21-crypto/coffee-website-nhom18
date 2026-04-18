@@ -66,7 +66,7 @@ const MainLayout = () => {
       } else {
         alert(result || "Sai email hoặc mật khẩu!");
       }
-    // eslint-disable-next-line no-unused-vars
+      // eslint-disable-next-line no-unused-vars
     } catch (error) {
       alert("Lỗi kết nối đến máy chủ!");
     } finally {
@@ -99,7 +99,7 @@ const MainLayout = () => {
       } else {
         alert(result || "Đăng ký không thành công!");
       }
-    // eslint-disable-next-line no-unused-vars
+      // eslint-disable-next-line no-unused-vars
     } catch (error) {
       alert("Lỗi hệ thống khi đăng ký!");
     } finally {

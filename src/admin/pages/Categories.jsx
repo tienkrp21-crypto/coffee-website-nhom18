@@ -120,12 +120,12 @@ export default function Categories() {
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-gray-800">
+        <h1 className="text-3xl font-bold text-orange-800">
           📁 Quản lý Danh mục
         </h1>
         <button
           onClick={handleAdd}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors"
+          className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded transition-all hover:scale-105 shadow-md"
         >
           + Thêm danh mục
         </button>
@@ -146,8 +146,8 @@ export default function Categories() {
       {!loading && !error && (
         <>
           {showForm && (
-            <div className="bg-white rounded-lg shadow p-6 mb-8">
-              <h2 className="text-xl font-bold text-gray-800 mb-4">
+            <div className="bg-white rounded-lg shadow-lg p-6 mb-8 border border-orange-200">
+              <h2 className="text-xl font-bold text-orange-800 mb-4">
                 {editingId ? "Sửa danh mục" : "Thêm danh mục mới"}
               </h2>
 
@@ -165,7 +165,7 @@ export default function Categories() {
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                  className="w-full px-4 py-2 border border-orange-300 rounded-lg focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-colors"
                   disabled={saving}
                 />
                 <textarea
@@ -175,21 +175,21 @@ export default function Categories() {
                     setFormData({ ...formData, description: e.target.value })
                   }
                   rows="3"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                  className="w-full px-4 py-2 border border-orange-300 rounded-lg focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-colors"
                   disabled={saving}
                 />
                 <div className="flex gap-2">
                   <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-bold py-2 px-4 rounded transition-colors"
+                    className="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-bold py-2 px-4 rounded transition-all hover:scale-105 shadow-md"
                   >
                     {saving ? "Đang lưu..." : "Lưu"}
                   </button>
                   <button
                     onClick={() => setShowForm(false)}
                     disabled={saving}
-                    className="bg-gray-400 hover:bg-gray-500 disabled:bg-gray-300 text-white font-bold py-2 px-4 rounded transition-colors"
+                    className="bg-gray-400 hover:bg-gray-500 disabled:bg-gray-300 text-white font-bold py-2 px-4 rounded transition-all hover:scale-105 shadow-md"
                   >
                     Hủy
                   </button>
@@ -199,27 +199,27 @@ export default function Categories() {
           )}
 
           {/* Table */}
-          <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-orange-200">
             <table className="w-full">
-              <thead className="bg-gray-100 border-b">
+              <thead className="bg-orange-100 border-b border-orange-200">
                 <tr>
-                  <th className="px-6 py-3 text-left font-semibold text-gray-700">
+                  <th className="px-6 py-3 text-left font-semibold text-orange-800">
                     Tên danh mục
                   </th>
-                  <th className="px-6 py-3 text-left font-semibold text-gray-700">
+                  <th className="px-6 py-3 text-left font-semibold text-orange-800">
                     Mô tả
                   </th>
-                  <th className="px-6 py-3 text-center font-semibold text-gray-700">
+                  <th className="px-6 py-3 text-center font-semibold text-orange-800">
                     Sản phẩm
                   </th>
-                  <th className="px-6 py-3 text-center font-semibold text-gray-700">
+                  <th className="px-6 py-3 text-center font-semibold text-orange-800">
                     Hành động
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {categories.map((category) => (
-                  <tr key={category.id} className="border-b hover:bg-gray-50">
+                  <tr key={category.id} className="border-b border-orange-100 hover:bg-orange-50 transition-colors">
                     <td className="px-6 py-4 font-semibold text-gray-800">
                       {category.name}
                     </td>
@@ -232,13 +232,13 @@ export default function Categories() {
                     <td className="px-6 py-4 text-center">
                       <button
                         onClick={() => handleEdit(category)}
-                        className="bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded text-sm mr-2 transition-colors"
+                        className="bg-orange-500 hover:bg-orange-600 text-white py-1 px-3 rounded text-sm mr-2 transition-all hover:scale-105 shadow-md"
                       >
                         Sửa
                       </button>
                       <button
                         onClick={() => handleDelete(category.id)}
-                        className="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded text-sm transition-colors"
+                        className="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded text-sm transition-all hover:scale-105 shadow-md"
                       >
                         Xóa
                       </button>
