@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
 
 const Login = () => {
+  // eslint-disable-next-line no-unused-vars
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
@@ -35,7 +36,7 @@ const Login = () => {
         localStorage.setItem('user', JSON.stringify(userData));
         
         alert("Đăng nhập thành công!");
-        navigate('/'); // Chuyển về trang chủ
+        window.location.href = '/'; // Dùng cái này để đồng bộ Giỏ hàng ngay lập tức
       } else {
         // Nếu Backend trả về 401 hoặc 400, lấy thông báo lỗi trả về
         const errorMsg = await response.text();

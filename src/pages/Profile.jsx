@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Mail, Phone, Edit2, Save, LogOut, ArrowLeft, Package } from 'lucide-react'; // Thêm Package icon
 import LoadingPage from '../components/LoadingPage'; 
+import { useCart } from '../context/CartContext';
 
 const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
 
 const Profile = () => {
   const navigate = useNavigate();
+  const { clearCart } = useCart();
   const [isEditing, setIsEditing] = useState(false);
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -32,6 +34,7 @@ const Profile = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('user');
+    clearCart(); // <- DÒNG MỚI THÊM: Xóa sạch giỏ hàng trên giao diện!
     alert('Đăng xuất thành công! Hẹn gặp lại bạn tại CafeMaterial.');
     navigate('/');
   };

@@ -25,22 +25,35 @@ export const CartProvider = ({ children }) => {
     });
   };
 
+  // 🔴 ĐÃ FIX LỖI: Thêm hàm updateQuantity để xử lý nút Cộng/Trừ
+  const updateQuantity = (id, quantity) => {
+    // Nếu khách bấm trừ về 0 thì tự động gọi hàm Xóa món đó luôn
+    if (quantity <= 0) {
+      removeFromCart(id);
+      return;
+    }
+    // Cập nhật lại số lượng mới
+    setCartItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, quantity } : item))
+    );
+  };
+
   // Logic xóa 1 sản phẩm
   const removeFromCart = (id) => {
     setCartItems((prev) => prev.filter((item) => item.id !== id));
   };
 
-  // FIX LỖI: Thêm hàm dọn sạch giỏ hàng (Dùng khi đặt hàng xong)
+  // Logic dọn sạch giỏ hàng
   const clearCart = () => {
     setCartItems([]);
-    localStorage.removeItem('cart'); // Xóa luôn rác trong bộ nhớ máy
+    localStorage.removeItem('cart'); 
   };
 
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
   return (
-    // Nhớ cấp quyền cho clearCart được gọi ở các file khác
-    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, clearCart, cartCount }}>
+    // 🔴 ĐÃ FIX LỖI: Bổ sung chữ updateQuantity vào đây để Cart.jsx có thể xài được
+    <CartContext.Provider value={{ cartItems, addToCart, updateQuantity, removeFromCart, clearCart, cartCount }}>
       {children}
     </CartContext.Provider>
   );

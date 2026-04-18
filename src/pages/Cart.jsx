@@ -8,7 +8,8 @@ const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
 
 const Cart = () => {
   // Lấy dữ liệu và hàm xử lý từ CartContext 
-  const { cartItems, addToCart, removeFromCart } = useCart();
+  // eslint-disable-next-line no-unused-vars
+  const { cartItems, addToCart, removeFromCart, updateQuantity } = useCart();
   // Thuật toán tính tổng tiền bằng hàm .reduce() của ES6.
   // Lặp qua từng 'item' trong giỏ, lấy giá (price) * số lượng (quantity) cộng dồn vào biến 'sum'
   const totalPrice = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -73,20 +74,25 @@ const Cart = () => {
                       </div>
                       
                       <div className="flex items-center gap-6">
-                        <div className="flex items-center border border-gray-300 bg-secondary">
-                          <span className="px-4 py-2 font-heading text-dark">SL: {item.quantity}</span>
-                          <button 
-                            onClick={() => addToCart(item)} 
-                            className="px-3 py-2 bg-dark text-primary hover:bg-primary hover:text-white transition font-bold"
-                          >+</button>
-                        </div>
-                        <button 
-                          onClick={() => removeFromCart(item.id)} 
-                          className="text-red-500 hover:text-red-700 p-2 transition"
-                        >
-                          <Trash2 size={24} />
-                        </button>
-                      </div>
+                     {/* ĐÃ THÊM LẠI ĐẦY ĐỦ NÚT CỘNG TRỪ */}
+                     <div className="flex items-center border border-gray-300 bg-secondary">
+                       <button 
+                         onClick={() => updateQuantity(item.id, item.quantity - 1)} 
+                         className="px-3 py-2 bg-dark text-primary hover:bg-primary hover:text-white transition font-bold"
+                       >-</button>
+                       <span className="px-4 py-2 font-heading text-dark">SL: {item.quantity}</span>
+                       <button 
+                         onClick={() => updateQuantity(item.id, item.quantity + 1)} 
+                         className="px-3 py-2 bg-dark text-primary hover:bg-primary hover:text-white transition font-bold"
+                       >+</button>
+                     </div>
+                     <button 
+                       onClick={() => removeFromCart(item.id)} 
+                       className="text-red-500 hover:text-red-700 p-2 transition"
+                     >
+                       <Trash2 size={24} />
+                     </button>
+                   </div>
                     </div>
                   ))}
                 </div>

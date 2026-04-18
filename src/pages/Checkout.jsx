@@ -1,8 +1,8 @@
 /* eslint-disable no-unused-vars */
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { Link, useNavigate } from 'react-router-dom';
-import { CheckCircle, Loader2 } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 import LoadingPage from '../components/LoadingPage';
 
 const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
@@ -17,8 +17,9 @@ const Checkout = () => {
   const [paymentMethod, setPaymentMethod] = useState('cod');
   const [loading, setLoading] = useState(false);
 
+  // ĐÃ DỌN SẠCH CHỮ .PRODUCT
   const totalPrice = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shippingFee = 30000; // Phí ship mặc định, sếp có thể đổi
+  const shippingFee = 30000; 
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -29,7 +30,6 @@ const Checkout = () => {
     e.preventDefault(); 
     setLoading(true);
 
-    // Lấy ID người dùng ĐỘNG từ LocalStorage
     const savedUser = localStorage.getItem('user');
     if (!savedUser) {
         alert("Sếp ơi, sếp phải đăng nhập mới đặt hàng được nhé!");
@@ -40,7 +40,6 @@ const Checkout = () => {
     const userObj = JSON.parse(savedUser);
     const currentUserId = userObj.id; 
 
-    // Format dữ liệu DTO gửi cho Backend
     const orderData = {
       receiverName: formData.fullName,
       receiverPhone: formData.phone,
@@ -57,24 +56,19 @@ const Checkout = () => {
     try {
       const response = await fetch(`${BASE_URL}/checkout`, { 
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderData),
       });
 
       if (response.ok) {
         const result = await response.json();
         
-        // LUỒNG ĐIỀU HƯỚNG THANH TOÁN
         if (result.paymentUrl) {
-            // Nếu là VNPay, chuyển hướng sang trang của VNPay (Chưa xóa giỏ hàng vội)
             window.location.href = result.paymentUrl;
         } else {
-            // Nếu là COD, đặt thành công -> Xóa giỏ hàng -> Chuyển sang Cảm ơn
             if (clearCart) clearCart(); 
             alert("Đặt hàng thành công! CafeMaterial đang chuẩn bị món cho bạn.");
-            navigate('/payment-result', { state: { orderId: result.orderId || result.id } }); 
+            navigate('/order-history'); 
         }
       } else {
         const errorMsg = await response.text();
@@ -110,10 +104,10 @@ const Checkout = () => {
 
       <div className="container mx-auto px-4 max-w-6xl">
         <form onSubmit={handlePlaceOrder} className="flex flex-col lg:flex-row gap-10">
+          {/* CỘT TRÁI */}
           <div className="w-full lg:w-2/3">
             <div className="bg-secondary p-10 shadow-xl border-t-4 border-primary">
               <h3 className="font-serif text-3xl text-dark mb-8 border-b border-gray-200 pb-4 italic">Thông tin giao hàng</h3>
-              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
                   <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 tracking-widest">Họ tên *</label>
@@ -145,20 +139,19 @@ const Checkout = () => {
                 {cartItems.map((item) => (
                   <div key={item.id} className="flex justify-between items-center border-b border-gray-800 pb-3">
                     <div className="flex gap-3 items-center">
-                      
-                      {/* 🛠 ĐÃ FIX: Logic hiển thị ảnh xịn sò */}
+                      {/* ĐÃ DỌN SẠCH CHỮ .PRODUCT */}
                       <img 
                         src={item.image?.startsWith("http") ? item.image : `${BASE_URL}/${item.image?.replace(/^\//, "")}`} 
                         alt={item.name} 
                         className="w-12 h-12 object-cover rounded-sm border border-gray-700" 
                         onError={(e) => { e.target.src = "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?q=80&w=400"; }}
                       />
-
                       <div>
                         <p className="font-serif text-sm line-clamp-1">{item.name}</p>
                         <p className="text-gray-500 text-[10px] uppercase font-bold tracking-widest">SL: {item.quantity}</p>
                       </div>
                     </div>
+                    {/* ĐÃ DỌN SẠCH CHỮ .PRODUCT */}
                     <span className="font-serif text-primary text-sm">{(item.price * item.quantity).toLocaleString('vi-VN')}đ</span>
                   </div>
                 ))}
