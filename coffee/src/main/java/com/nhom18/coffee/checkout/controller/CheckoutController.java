@@ -1,13 +1,8 @@
 package com.nhom18.coffee.checkout.controller;
 
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,28 +12,24 @@ import com.nhom18.coffee.checkout.dto.CheckoutRequest;
 import com.nhom18.coffee.checkout.dto.CheckoutResponse;
 import com.nhom18.coffee.checkout.model.Order;
 import com.nhom18.coffee.checkout.service.CheckoutService;
-import com.nhom18.coffee.checkout.service.VNPayService;
-
-import jakarta.servlet.http.HttpServletRequest;
+import com.nhom18.coffee.checkout.service.PayOSService;
 
 @RestController
 @RequestMapping("/checkout")
-@CrossOrigin("*") // Cho phép Frontend gọi API mà không bị lỗi CORS
+@CrossOrigin("*") 
 public class CheckoutController {
 
     @Autowired
     private CheckoutService checkoutService;
 
     @Autowired
-    private VNPayService vnPayService;
+    private PayOSService payOSService;
 
     // 1. API Gửi thông tin giỏ hàng và đặt đơn
     @PostMapping
-    public ResponseEntity<CheckoutResponse> processCheckout(
-            @RequestBody CheckoutRequest request,
-            HttpServletRequest httpRequest) {
+    public ResponseEntity<CheckoutResponse> processCheckout(@RequestBody CheckoutRequest request) {
 
-        // Bước 1: Lưu đơn hàng vào Database (Trạng thái mặc định là PENDING và UNPAID)
+        // Bước 1: Lưu đơn hàng vào Database
         Order savedOrder = checkoutService.createOrder(request);
 
         CheckoutResponse response = new CheckoutResponse();
@@ -46,18 +37,21 @@ public class CheckoutController {
 
         // Bước 2: Xử lý theo phương thức thanh toán
         if ("COD".equalsIgnoreCase(request.getPaymentMethod())) {
-            // Nếu là trả tiền mặt, chỉ cần báo thành công
             response.setMessage("Đặt hàng thành công. Vui lòng thanh toán khi nhận hàng.");
             return ResponseEntity.ok(response);
             
-        } else if ("VNPAY".equalsIgnoreCase(request.getPaymentMethod())) {
-            // Nếu là VNPay, tạo link Sandbox và gửi về cho Frontend để FE tự chuyển hướng user
-            String ipAddress = getIpAddress(httpRequest);
-            String paymentUrl = vnPayService.createOrderUrl(savedOrder.getFinalAmount(), savedOrder.getId(), ipAddress);
+        } else if ("PAYOS".equalsIgnoreCase(request.getPaymentMethod()) || "VNPAY".equalsIgnoreCase(request.getPaymentMethod())) {
+            // Tạo link thanh toán PayOS (chứa mã VietQR)
+            String paymentUrl = payOSService.createPaymentLink(savedOrder.getFinalAmount(), savedOrder.getOrderCode());
             
-            response.setMessage("Vui lòng thanh toán qua link VNPay đính kèm.");
-            response.setPaymentUrl(paymentUrl);
-            return ResponseEntity.ok(response);
+            if (paymentUrl != null) {
+                response.setMessage("Vui lòng thanh toán qua link đính kèm.");
+                response.setPaymentUrl(paymentUrl);
+                return ResponseEntity.ok(response);
+            } else {
+                response.setMessage("Lỗi tạo mã thanh toán QR!");
+                return ResponseEntity.badRequest().body(response);
+            }
             
         } else {
             response.setMessage("Phương thức thanh toán không hợp lệ!");
@@ -65,50 +59,50 @@ public class CheckoutController {
         }
     }
 
-    // 2. API Hứng dữ liệu VNPay trả về (Return URL)
-    @GetMapping("/vnpay-return")
-    public ResponseEntity<?> vnpayReturn(HttpServletRequest request) {
-        // Lấy tất cả các parameter mà VNPay gửi về
-        Map<String, String> fields = new HashMap<>();
-        Enumeration<String> params = request.getParameterNames();
-        while (params.hasMoreElements()) {
-            String fieldName = params.nextElement();
-            String fieldValue = request.getParameter(fieldName);
-            if (fieldValue != null && fieldValue.length() > 0) {
-                fields.put(fieldName, fieldValue);
+    // 2. API Hứng dữ liệu Webhook từ PayOS (Tương tự return url của vnpay nhưng chạy ngầm)
+    @PostMapping("/payos-webhook")
+    public ResponseEntity<?> payOSWebhook(@RequestBody String jsonBody) {
+        
+        com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        com.fasterxml.jackson.databind.node.ObjectNode response = mapper.createObjectNode();
+        
+        try {
+            // Bước 1: Dùng thư viện JSON để lấy thông tin cơ bản trước
+            vn.payos.type.Webhook webhookData = mapper.readValue(jsonBody, vn.payos.type.Webhook.class);
+
+            // Lúc bạn bấm Lưu ở trang quản trị, PayOS gửi 1 giao dịch mẫu cấu hình. 
+            // Ta không verify chữ ký cái test này để tránh cấu hình lỗi vòng lặp
+            if (webhookData.getData() != null && webhookData.getData().getAmount() == 0) {
+                response.put("error", 0);
+                response.put("message", "Ok");
+                response.put("data", "Webhook test OK");
+                return ResponseEntity.ok(response);
             }
+
+            // Bước 2: Với đơn hàng có tiền, ta verify chữ ký
+            vn.payos.type.WebhookData data = payOSService.verifyWebhook(webhookData);
+
+            if ("00".equals(data.getCode()) || "success".equalsIgnoreCase(data.getCode())) {
+                
+                Long orderCode = data.getOrderCode();
+                
+                // Cập nhật CSDL theo đúng orderCode PayOS vừa báo về
+                checkoutService.updateOrderStatusByOrderCode(orderCode, 1, "PROCESSING");
+                
+                System.out.println("====== THANH TOÁN THÀNH CÔNG ĐƠN HÀNG CODE: " + orderCode + " ======");
+            }
+
+            response.put("error", 0);
+            response.put("message", "Ok");
+            response.set("data", null); // Set được null thoải mái
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.put("error", 0);
+            response.put("message", "Bỏ qua lỗi: " + e.getMessage());
+            response.set("data", null);
+            return ResponseEntity.ok(response); // Trả về 200 OK để PayOS không báo lỗi 500
         }
-
-        // Lấy mã bảo mật và validate chữ ký
-        String vnp_SecureHash = request.getParameter("vnp_SecureHash");
-        boolean isSignValid = vnPayService.validateSignature(fields, vnp_SecureHash);
-
-        if (!isSignValid) {
-            return ResponseEntity.badRequest().body("Dữ liệu không hợp lệ / Sai chữ ký VNPay");
-        }
-
-        // Nếu chữ ký chuẩn, kiểm tra trạng thái thanh toán
-        String vnp_ResponseCode = request.getParameter("vnp_ResponseCode");
-        Integer orderId = Integer.parseInt(request.getParameter("vnp_TxnRef"));
-
-        if ("00".equals(vnp_ResponseCode)) {
-            // 00 là mã thành công của VNPay
-            checkoutService.updateOrderStatus(orderId, 1, "PROCESSING"); // 1 = PAID
-            return ResponseEntity.ok("Thanh toán thành công! Đơn hàng của bạn đang được xử lý.");
-        } else {
-            // Thanh toán lỗi hoặc khách hàng hủy thanh toán
-            checkoutService.updateOrderStatus(orderId, 2, "CANCELLED"); // 2 = FAILED
-            checkoutService.restoreStock(orderId);
-            return ResponseEntity.badRequest().body("Thanh toán thất bại hoặc đã bị hủy.");
-        }
-    }
-
-    // Hàm phụ trợ để lấy IP Address của người dùng (VNPay yêu cầu phải có)
-    private String getIpAddress(HttpServletRequest request) {
-        String ipAdress = request.getHeader("X-FORWARDED-FOR");
-        if (ipAdress == null) {
-            ipAdress = request.getRemoteAddr();
-        }
-        return ipAdress;
     }
 }

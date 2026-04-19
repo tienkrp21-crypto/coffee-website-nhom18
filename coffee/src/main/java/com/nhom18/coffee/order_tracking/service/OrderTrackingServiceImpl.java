@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.nhom18.coffee.QLproducts.Product;
 import com.nhom18.coffee.QLproducts.ProductRepository;
+import com.nhom18.coffee.checkout.service.PayOSService;
 import com.nhom18.coffee.order_tracking.dto.OrderDetailDto;
 import com.nhom18.coffee.order_tracking.dto.OrderHistoryResponse;
 import com.nhom18.coffee.order_tracking.model.OrderDetailTracking;
@@ -27,6 +28,9 @@ public class OrderTrackingServiceImpl implements OrderTrackingService {
 
     @Autowired
     private ProductRepository productRepository; // Gọi Repo của module Product để thực hiện hoàn kho
+
+    @Autowired
+    private PayOSService payOSService;
 
     @Override
     public List<OrderHistoryResponse> getOrderHistory(Integer userId) {
@@ -78,6 +82,14 @@ public class OrderTrackingServiceImpl implements OrderTrackingService {
             return "Thất bại: Đơn hàng đã được xử lý hoặc đã giao, không thể tự hủy.";
         }
 
+        // THAY ĐỔI Ở ĐÂY: Chặn mã QR trên Cổng thanh toán trước
+        if ("PAYOS".equalsIgnoreCase(order.getPaymentMethod()) || "VNPAY".equalsIgnoreCase(order.getPaymentMethod())) {
+            if (order.getOrderCode() != null) {
+                // Gọi api hủy link payos
+                payOSService.cancelPaymentLink(order.getOrderCode(), "Người dùng hủy đơn hàng");
+            }
+        }
+
         // 1. Cập nhật trạng thái đơn hàng thành Hủy (CANCELLED)
         order.setOrderStatus("CANCELLED");
         if (order.getPaymentStatus() == 0) { // Nếu chưa trả tiền, cho thành "Thanh toán bị Hủy" luôn
@@ -99,5 +111,15 @@ public class OrderTrackingServiceImpl implements OrderTrackingService {
         }
 
         return "Thành công: Đã hủy đơn và hoàn lại số lượng hàng vào kho!";
+    }
+
+    @Override
+    public String cancelOrderByOrderCode(Long orderCode) {
+        // Tìm đơn hàng trên Database nhờ vào orderCode
+        OrderTracking order = orderRepository.findByOrderCode(orderCode)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng với mã: " + orderCode));
+
+        // Không cần viết lại code hoàn kho, ủy quyền toàn bộ cho hàm cancelOrder cũ của bạn!
+        return cancelOrder(order.getId());
     }
 }

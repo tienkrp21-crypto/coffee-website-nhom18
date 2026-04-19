@@ -53,6 +53,9 @@ public class Order {
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "order_code")
+    private Long orderCode;
+
     // --- CÁC HÀM GETTER & SETTER ---
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
@@ -80,4 +83,6 @@ public class Order {
     public void setReceiverPhone(String receiverPhone) { this.receiverPhone = receiverPhone; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public Long getOrderCode() { return orderCode; }
+    public void setOrderCode(Long orderCode) { this.orderCode = orderCode; }
 }

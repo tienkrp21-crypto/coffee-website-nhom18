@@ -1,4 +1,5 @@
 package com.nhom18.coffee.checkout.dto;
+
 import java.util.List;
 
 public class CheckoutRequest {
@@ -7,9 +8,8 @@ public class CheckoutRequest {
     private String receiverPhone;
     private String shippingAddress;
     private String paymentMethod; // "COD" hoặc "VNPAY"
-    public List<CheckoutItemRequest> getItems() { return items; }
-    public void setItems(List<CheckoutItemRequest> items) { this.items = items; }
     private List<CheckoutItemRequest> items;
+
     // --- GETTER & SETTER ---
     public Integer getUserId() { return userId; }
     public void setUserId(Integer userId) { this.userId = userId; }
@@ -21,4 +21,6 @@ public class CheckoutRequest {
     public void setShippingAddress(String shippingAddress) { this.shippingAddress = shippingAddress; }
     public String getPaymentMethod() { return paymentMethod; }
     public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
+    public List<CheckoutItemRequest> getItems() { return items; }
+    public void setItems(List<CheckoutItemRequest> items) { this.items = items; }
 }

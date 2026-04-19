@@ -10,4 +10,7 @@ public interface OrderTrackingService {
     
     // 2. Hủy đơn và trả lại hàng vào kho
     String cancelOrder(Integer orderId);
+    
+    // 3. Hủy đơn theo mã đơn
+    String cancelOrderByOrderCode(Long orderCode);
 }

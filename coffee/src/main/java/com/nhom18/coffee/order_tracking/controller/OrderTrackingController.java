@@ -40,4 +40,16 @@ public class OrderTrackingController {
             return ResponseEntity.badRequest().body(result); // Trả về HTTP 400 nếu lỗi
         }
     }
+
+    // 3. API Hủy đơn hàng từ giao diện thanh toán cổng (Bằng orderCode)
+    @PutMapping("/cancel-by-code/{orderCode}")
+    public ResponseEntity<String> cancelOrderByCode(@PathVariable Long orderCode) {
+        String result = orderTrackingService.cancelOrderByOrderCode(orderCode);
+        
+        if (result.startsWith("Thành công")) {
+            return ResponseEntity.ok(result); 
+        } else {
+            return ResponseEntity.badRequest().body(result); 
+        }
+    }
 }

@@ -90,6 +90,11 @@ public class CheckoutServiceImpl implements CheckoutService {
         }
         orderDetailRepository.saveAll(orderDetailsToSave);
 
+        // THÊM 2 DÒNG NÀY (Tạo orderCode dựa trên số ngẫu nhiên hoặc timestamp)
+        // Lưu ý: PayOS yêu cầu orderCode là số nguyên dương <= 9007199254740991 (kiểu Long)
+        Long generatedCode = System.currentTimeMillis() % 100000000000000L; 
+        order.setOrderCode(generatedCode);
+
         return savedOrder;
     }
 
@@ -105,8 +110,12 @@ public class CheckoutServiceImpl implements CheckoutService {
 
     @Override
     @Transactional
-    public void restoreStock(Integer orderId) {
-        // Lấy lại danh sách hàng trong đơn để hoàn vào kho
-        // (Sẽ triển khai sau nếu bạn cần API hủy đơn hàng)
+    public void updateOrderStatusByOrderCode(Long orderCode, Integer paymentStatus, String orderStatus) {
+        Order order = orderRepository.findByOrderCode(orderCode)
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy Order với Code: " + orderCode));
+        
+        order.setPaymentStatus(paymentStatus);
+        order.setOrderStatus(orderStatus);
+        orderRepository.save(order);
     }
 }

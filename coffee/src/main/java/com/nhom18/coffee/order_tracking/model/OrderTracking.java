@@ -38,6 +38,9 @@ public class OrderTracking {
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "order_code")
+    private Long orderCode;
+
     // --- GETTER & SETTER DÀNH RIÊNG ---
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
@@ -62,4 +65,7 @@ public class OrderTracking {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public Long getOrderCode() { return orderCode; }
+    public void setOrderCode(Long orderCode) { this.orderCode = orderCode; }
 }
