@@ -1,4 +1,3 @@
-//Dùng để thiết lập bộ  khung cho toàn bộ ứng dụng, bao gồm header, footer
 import React, { useState } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -21,7 +20,7 @@ const MainLayout = () => {
   const location = useLocation(); 
   const navigate = useNavigate();
 
-  // 1. Quản lý trạng thái Modal
+  // 1. Quản lý trạng thái cho 2 modal Đăng nhập và Đăng ký
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   
@@ -42,7 +41,7 @@ const MainLayout = () => {
 
   const isActive = (path) => location.pathname === path;
 
-  // --- LOGIC ĐĂNG NHẬP ĐÃ FIX LỆCH PHA DỮ LIỆU ---
+  //LOGIC ĐĂNG NHẬP
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoadingLogin(true);
@@ -52,14 +51,9 @@ const MainLayout = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: loginEmail, password: loginPassword }),
       });
-      
-      // ĐÃ SỬA: Lấy nguyên bản text từ Backend trả về để giống 100% với trang Login riêng
       const result = await response.text(); 
-      
       if (response.ok) {
-        // ĐÃ SỬA: Lưu thẳng chuỗi vào bộ nhớ, không qua bước JSON.stringify để tránh bị lỗi parse ở Profile
         localStorage.setItem("user", result);
-        
         alert("Đăng nhập thành công!");
         setIsLoginOpen(false);
         window.location.reload();
@@ -74,9 +68,24 @@ const MainLayout = () => {
     }
   };
 
-  // --- LOGIC ĐĂNG KÝ ---
+  //LOGIC ĐĂNG KÝ
   const handleRegister = async (e) => {
     e.preventDefault();
+    // 1. RÀNG BUỘC REGEX CHO MODAL
+    const nameRegex = /^[a-zA-ZÀ-ỹ\s]{3,}$/; // Tên ít nhất 3 chữ cái
+    const phoneRegex = /^0\d{9}$/; // SĐT phải bắt đầu bằng 0 và đủ 10 số
+    const passRegex = /^(?=.*[A-Z]).{8,}$/; // Pass >= 8 ký tự, có chữ IN HOA
+
+    if (!nameRegex.test(fullName.trim())) {
+      return alert("Vui lòng nhập đúng Họ và tên (chỉ bao gồm chữ cái và khoảng trắng)!");
+    }
+    if (!phoneRegex.test(regPhone)) {
+      return alert("Số điện thoại không hợp lệ! Phải bắt đầu bằng số 0 và gồm đúng 10 chữ số.");
+    }
+    if (!passRegex.test(regPassword)) {
+      return alert("Mật khẩu quá yếu! Cần ít nhất 8 ký tự và phải chứa ít nhất 1 chữ cái IN HOA.");
+    }
+
     setLoadingReg(true);
     try {
       const response = await fetch(`${BASE_URL}/users/register`, {
@@ -89,15 +98,14 @@ const MainLayout = () => {
           password: regPassword,
         }),
       });
-      
-      const result = await response.text();
-      
+
       if (response.ok) {
         alert("Đăng ký thành công! Bạn có thể đăng nhập ngay.");
         setIsRegisterOpen(false);
         setIsLoginOpen(true);
       } else {
-        alert(result || "Đăng ký không thành công!");
+        const result = await response.text();
+        alert(result || "Đăng ký không thành công! Email/SĐT có thể đã tồn tại.");
       }
     // eslint-disable-next-line no-unused-vars
     } catch (error) {

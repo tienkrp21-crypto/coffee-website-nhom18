@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
-// Đảm bảo BASE_URL này khớp với link Render của sếp
 const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
 
 const Register = () => {
@@ -19,6 +18,32 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // ==========================================
+    // RÀNG BUỘC DỮ LIỆU (VALIDATION)
+    // ==========================================
+    // Chỉ cho phép chữ cái (tiếng Việt có dấu) và dấu cách. Tối thiểu 3 ký tự.
+    const nameRegex = /^[a-zA-ZÀ-ỹ\s]{3,}$/; 
+    // Bắt đầu bằng số 0, theo sau là đúng 9 chữ số (tổng 10 số).
+    const phoneRegex = /^0\d{9}$/; 
+    // Ít nhất 8 ký tự, CÓ ÍT NHẤT 1 CHỮ CÁI VIẾT HOA.
+    const passRegex = /^(?=.*[A-Z]).{8,}$/; 
+
+    if (!nameRegex.test(formData.fullName.trim())) {
+      return alert("Vui lòng nhập đúng Họ và tên (chỉ bao gồm chữ cái và khoảng trắng)!");
+    }
+
+    if (!phoneRegex.test(formData.phone)) {
+      return alert("Số điện thoại không hợp lệ! Phải bắt đầu bằng số 0 và gồm đúng 10 chữ số.");
+    }
+
+    if (!passRegex.test(formData.password)) {
+      return alert("Mật khẩu quá yếu! Cần ít nhất 8 ký tự và phải chứa ít nhất 1 chữ cái IN HOA.");
+    }
+
+    // ==========================================
+    // GỌI API NẾU DỮ LIỆU HỢP LỆ
+    // ==========================================
     try {
       const response = await fetch(`${BASE_URL}/users/register`, {
         method: 'POST',
@@ -26,12 +51,10 @@ const Register = () => {
         body: JSON.stringify(formData)
       });
 
-      // FIX: Xử lý phản hồi dựa trên trạng thái HTTP
       if (response.ok) {
         alert("Chúc mừng! Đăng ký tài khoản thành công. Giờ ông có thể đăng nhập rồi đó!");
         navigate('/login');
       } else {
-        // Nếu lỗi (ví dụ: trùng email), lấy thông báo từ Backend trả về
         const errorMsg = await response.text();
         alert(errorMsg || "Đăng ký thất bại. Email có thể đã tồn tại!");
       }

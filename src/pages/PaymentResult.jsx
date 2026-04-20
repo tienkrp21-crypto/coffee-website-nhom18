@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useLocation } from "react-router-dom"; // Đã bỏ Link và useNavigate đi cho đỡ lỗi
+import { useLocation } from "react-router-dom"; 
 import { CheckCircle, Home, ShoppingBag } from "lucide-react";
 import { useCart } from "../context/CartContext"; 
 
@@ -7,18 +7,19 @@ const PaymentResult = () => {
   const { clearCart } = useCart(); 
   const location = useLocation();
   
-  // LẤY MÃ ĐƠN HÀNG TỪ VNPAY HOẶC TRẠNG THÁI TRƯỚC ĐÓ
+  // 1. Lấy mã phản hồi từ VNPay hoặc tham số trên URL
   const queryParams = new URLSearchParams(location.search);
   const vnpResponseCode = queryParams.get("vnp_ResponseCode");
   
-  // Hỗ trợ lấy mã đơn hàng từ nhiều nguồn khác nhau để đảm bảo luôn hiện số
+  // 2. Nhặt mã đơn hàng từ nhiều nguồn để luôn hiển thị đúng cho khách
   const orderId = location.state?.orderId || queryParams.get("orderId") || queryParams.get("vnp_TxnRef") || "Đang cập nhật...";
 
   useEffect(() => {
-    // Nếu là đơn COD (có orderId) hoặc VNPay thành công (vnp_ResponseCode === '00')
+    // 3. Logic xác nhận thành công: Nếu có orderId (COD) hoặc mã VNPay là '00'
     const isSuccess = location.state?.orderId || vnpResponseCode === "00";
 
     if (isSuccess) {
+      // Dọn dẹp giỏ hàng ngay lập tức để tránh khách đặt trùng đơn
       clearCart(); 
       console.log("Đã dọn dẹp giỏ hàng sau khi thanh toán thành công!");
     }
@@ -26,6 +27,7 @@ const PaymentResult = () => {
 
   return (
     <div className="font-sans text-gray-600 bg-white pb-20 min-h-screen">
+      {/* Background Header */}
       <div
         className="container-fluid bg-dark p-12 mb-12 flex items-center justify-center relative"
         style={{ 
@@ -35,9 +37,8 @@ const PaymentResult = () => {
         }}
       >
         <div className="text-center z-10 py-10">
-          <h1 className="display-4 text-uppercase text-white font-heading text-5xl mb-4">Hoàn Tất</h1>
+          <h1 className="display-4 text-uppercase text-white font-heading text-5xl mb-4 italic">Hoàn Tất</h1>
           <div className="flex items-center justify-center gap-3 text-white font-heading text-lg">
-            {/* Dùng thẻ a href thay vì Link để ép load lại trang */}
             <a href="/" className="hover:text-primary transition">Trang chủ</a>
             <span className="text-primary">//</span>
             <span>Kết quả thanh toán</span>
@@ -56,42 +57,31 @@ const PaymentResult = () => {
             Cảm ơn bạn đã tin tưởng CafeMaterial. Đơn hàng <span className="text-primary font-bold">#{orderId}</span> của bạn đã được tiếp nhận.
           </p>
 
-          <div className="p-6 bg-white border border-gray-200 mb-10 inline-block text-left max-w-lg w-full shadow-inner">
+          {/* Hộp thông tin chi tiết */}
+          <div className="p-6 bg-[#FAF3EB] border border-gray-200 mb-10 inline-block text-left max-w-lg w-full shadow-inner">
             <h4 className="font-heading text-xl text-dark mb-3 border-b pb-2 uppercase">Thông tin đơn hàng</h4>
-            <ul className="text-sm text-gray-600 space-y-3">
-              <li className="flex gap-2">
-                <span className="text-primary font-bold">•</span>
-                Hóa đơn chi tiết đã được lưu vào Lịch sử mua hàng của bạn.
-              </li>
-              <li className="flex gap-2">
-                <span className="text-primary font-bold">•</span>
-                Đơn hàng sẽ được đóng gói và giao đến bạn trong vòng 2-4 ngày làm việc.
-              </li>
-              <li className="flex gap-2">
-                <span className="text-primary font-bold">•</span>
-                Nhân viên cửa hàng sẽ gọi điện xác nhận trước khi giao hàng.
-              </li>
+            <ul className="text-sm text-gray-600 space-y-3 italic">
+              <li className="flex gap-2"><span className="text-primary font-bold">•</span> Hóa đơn đã được lưu vào Lịch sử mua hàng.</li>
+              <li className="flex gap-2"><span className="text-primary font-bold">•</span> Đơn hàng sẽ được giao đến bạn trong vòng 2-4 ngày.</li>
+              <li className="flex gap-2"><span className="text-primary font-bold">•</span> Barista sẽ gọi điện xác nhận trước khi giao.</li>
             </ul>
           </div>
 
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            
-            {/* NÚT TIẾP TỤC MUA SẮM - Ép tải lại trang Products */}
+            {/* Ép tải lại trang để làm sạch toàn bộ State cũ */}
             <button 
                 onClick={() => window.location.href = "/products"}
-                className="flex items-center justify-center gap-2 bg-primary text-dark font-heading px-8 py-4 uppercase text-lg hover:bg-white border-inner border-inner-dark transition w-full sm:w-auto cursor-pointer"
+                className="flex items-center justify-center gap-2 bg-primary text-dark font-heading px-8 py-4 uppercase text-lg hover:bg-white border-inner border-inner-dark transition w-full sm:w-auto"
             >
               <ShoppingBag size={20} /> Tiếp tục mua sắm
             </button>
             
-            {/* NÚT VỀ TRANG CHỦ - Ép tải lại trang chủ sạch sẽ */}
             <button 
                 onClick={() => window.location.href = "/"}
-                className="flex items-center justify-center gap-2 bg-dark text-white font-heading px-8 py-4 uppercase text-lg hover:bg-primary border-inner transition w-full sm:w-auto cursor-pointer"
+                className="flex items-center justify-center gap-2 bg-dark text-white font-heading px-8 py-4 uppercase text-lg hover:bg-primary border-inner transition w-full sm:w-auto"
             >
               <Home size={20} /> Về trang chủ
             </button>
-
           </div>
         </div>
       </div>

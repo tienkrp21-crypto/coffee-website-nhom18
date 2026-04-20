@@ -5,8 +5,8 @@ import { Search } from "lucide-react";
 
 const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
 const ProductList = () => {
-  const { addToCart } = useCart();
-
+  const { addToCart } = useCart();//Lấy hàm thêm vào giỏ hàng từ Context để dùng ở các nút bấm.
+  //biến lưu trữu toàn bộ sản phẩm và danh mục lấy từ API
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
   const [searchQuery, setSearchQuery] = useState("");
@@ -19,9 +19,10 @@ const ProductList = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        //lấy danh mục và sản phẩm từ API
         const catResponse = await fetch(`${BASE_URL}/categories`);
+        // đưa vào state
         if (catResponse.ok) setApiCategories(await catResponse.json());
-
         const prodResponse = await fetch(`${BASE_URL}/products`);
         if (prodResponse.ok) setApiProducts(await prodResponse.json());
       } catch (error) {
@@ -30,16 +31,17 @@ const ProductList = () => {
     };
     fetchData();
   }, []);
+  // bộ loc và sắp xếp sản phẩm dựa trên các tiêu chí đã chọn, sử dụng useMemo
   const filteredProducts = useMemo(() => {
+    //Tạo một bản sao từ danh sách gốc để bắt đầu lọc
     let filtered = [...apiProducts];
-
     if (selectedCategory !== "all") {
       filtered = filtered.filter((p) => {
         const catName = p.category?.name || p.category;
         return catName === selectedCategory;
       });
     }
-
+    // Nếu có truy vấn tìm kiếm, lọc thêm dựa trên tên và mô tả sản phẩm
     if (searchQuery.trim()) {
       filtered = filtered.filter(
         (p) =>
@@ -67,7 +69,8 @@ const ProductList = () => {
     return filtered;
   }, [selectedCategory, sortBy, searchQuery, apiProducts]);
 
-  
+  //phân trang
+  // kiểm tra số trang
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const paginatedProducts = filteredProducts.slice(
     (currentPage - 1) * itemsPerPage,
@@ -78,7 +81,7 @@ const ProductList = () => {
     e.preventDefault();
     
     e.stopPropagation();
-    addToCart(product);
+    addToCart(product);// gọi hàm thêm sản phẩm vào giỏ hàng từ context
   };
 
   return (
@@ -89,7 +92,6 @@ const ProductList = () => {
       </div>
 
       <div className="container mx-auto px-4">
-        {/* THANH DANH MỤC LẤY TỪ API */}
         <div className="text-center mb-12">
           <ul className="inline-flex justify-center bg-dark uppercase border-inner p-4 mb-5 flex-wrap gap-2 shadow-lg">
             <li>
@@ -101,10 +103,12 @@ const ProductList = () => {
             {apiCategories.map((cat) => (
               <li key={cat.id}>
                 <button
+                //nút tương tác với danh mục, khi click sẽ cập nhật danh mục được chọn và đặt lại trang hiện tại về 1
                   onClick={() => {
                     setSelectedCategory(cat.name);
                     setCurrentPage(1);
                   }}
+                  // tô màu nút đang được chọn, các nút khác sẽ có hiệu ứng hover
                   className={`px-6 py-2 font-heading uppercase transition text-lg tracking-wider ${
                     selectedCategory === cat.name
                       ? "text-primary"
@@ -117,8 +121,7 @@ const ProductList = () => {
             ))}
           </ul>
         </div>
-
-        {/*THANH TÌM KIẾM & SẮP XẾP*/}
+          //tìm kiếm và sắp xếp
         <div className="flex flex-wrap items-center justify-between gap-4 bg-secondary border-inner p-4 mb-10 shadow-sm">
           <div className="flex items-center space-x-3 z-10 relative">
             <span className="font-heading uppercase text-dark font-bold">

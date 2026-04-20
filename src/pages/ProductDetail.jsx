@@ -6,21 +6,17 @@ import { ShoppingCart, ChevronLeft, Check } from "lucide-react";
 const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
 
 const ProductDetail = () => {
-  // Hook useParams của React-Router-Dom giúp lấy tham số (id) động trực tiếp từ trên thanh URL
   const { id } = useParams();
   const { addToCart } = useCart();
-
-  const [product, setProduct] = useState(null);
-  const [loading, setLoading] = useState(true);
-
+  const [product, setProduct] = useState(null);// chứathông tin sản phẩm được lấy từ API
+  const [loading, setLoading] = useState(true);// trạng thái để hiển thị khi đang tải dữ liệu
   //Hàm fetchProduct sẽ tự động chạy lại ngay lập tức nếu giá trị 'id' trên URL thay đổi
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/products/${id}`); 
+        const response = await fetch(`${BASE_URL}/products/${id}`); // chỉ lấy ID
         if (!response.ok) throw new Error("Không tìm thấy sản phẩm");
-
-        const data = await response.json();
+        const data = await response.json();// đổ dữ liệu vào biến data
         setProduct(data);
       } catch (error) {
         console.error("Lỗi:", error);
@@ -29,10 +25,8 @@ const ProductDetail = () => {
         setLoading(false); 
       }
     };
-
     fetchProduct();
   }, [id]);
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-secondary">
@@ -48,7 +42,6 @@ const ProductDetail = () => {
       </div>
     );
   }
-
   return (
     <div className="font-sans text-gray-600 bg-white pb-20">
       <div className="container-fluid bg-dark p-12 mb-12 flex items-center justify-center relative" style={{ backgroundImage: 'linear-gradient(rgba(43, 40, 37, .7), rgba(43, 40, 37, .7)), url("https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=1920")', backgroundSize: "cover", backgroundPosition: "center" }}>
