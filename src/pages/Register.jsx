@@ -6,12 +6,10 @@ const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
 const Register = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    fullName: '', 
-    email: '', 
-    phone: '', 
-    password: ''
+    fullName: '', email: '', phone: '', password: ''
   });
 
+  // Hàm cập nhật dữ liệu khi sếp gõ phím
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -20,30 +18,27 @@ const Register = () => {
     e.preventDefault();
 
     // ==========================================
-    // RÀNG BUỘC DỮ LIỆU (VALIDATION)
+    // 🛡️ BẢO VỆ DỮ LIỆU (VALIDATION) - PHẦN THẦY HAY HỎI NHẤT
     // ==========================================
-    // Chỉ cho phép chữ cái (tiếng Việt có dấu) và dấu cách. Tối thiểu 3 ký tự.
+    
+    // Regex: Chỉ cho phép chữ cái (tiếng Việt có dấu) và dấu cách. Tối thiểu 3 ký tự.
     const nameRegex = /^[a-zA-ZÀ-ỹ\s]{3,}$/; 
-    // Bắt đầu bằng số 0, theo sau là đúng 9 chữ số (tổng 10 số).
+    // Regex: Bắt đầu bằng số 0, sau đó là đúng 9 chữ số. Tổng cộng 10 số.
     const phoneRegex = /^0\d{9}$/; 
-    // Ít nhất 8 ký tự, CÓ ÍT NHẤT 1 CHỮ CÁI VIẾT HOA.
+    // Regex: Ít nhất 8 ký tự, PHẢI CÓ ÍT NHẤT 1 CHỮ CÁI VIẾT HOA.
     const passRegex = /^(?=.*[A-Z]).{8,}$/; 
 
     if (!nameRegex.test(formData.fullName.trim())) {
-      return alert("Vui lòng nhập đúng Họ và tên (chỉ bao gồm chữ cái và khoảng trắng)!");
+      return alert("Vui lòng nhập đúng Họ và tên!");
     }
-
     if (!phoneRegex.test(formData.phone)) {
-      return alert("Số điện thoại không hợp lệ! Phải bắt đầu bằng số 0 và gồm đúng 10 chữ số.");
+      return alert("Số điện thoại không hợp lệ (Phải đủ 10 số và bắt đầu bằng 0)!");
     }
-
     if (!passRegex.test(formData.password)) {
-      return alert("Mật khẩu quá yếu! Cần ít nhất 8 ký tự và phải chứa ít nhất 1 chữ cái IN HOA.");
+      return alert("Mật khẩu cần ít nhất 8 ký tự và 1 chữ IN HOA!");
     }
 
-    // ==========================================
-    // GỌI API NẾU DỮ LIỆU HỢP LỆ
-    // ==========================================
+    // GỌI API ĐĂNG KÝ SAU KHI DỮ LIỆU ĐÃ SẠCH
     try {
       const response = await fetch(`${BASE_URL}/users/register`, {
         method: 'POST',
@@ -52,15 +47,15 @@ const Register = () => {
       });
 
       if (response.ok) {
-        alert("Chúc mừng! Đăng ký tài khoản thành công. Giờ ông có thể đăng nhập rồi đó!");
-        navigate('/login');
+        alert("Đăng ký thành công!");
+        navigate('/login'); // Đuổi sếp sang trang Đăng nhập
       } else {
         const errorMsg = await response.text();
-        alert(errorMsg || "Đăng ký thất bại. Email có thể đã tồn tại!");
+        alert(errorMsg || "Đăng ký thất bại!");
       }
+    // eslint-disable-next-line no-unused-vars
     } catch (error) {
-      console.error("Lỗi kết nối:", error);
-      alert("Lỗi: Không thể kết nối đến máy chủ Render!");
+      alert("Lỗi kết nối máy chủ!");
     }
   };
 

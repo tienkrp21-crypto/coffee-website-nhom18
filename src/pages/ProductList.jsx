@@ -4,25 +4,31 @@ import { useCart } from "../context/CartContext";
 import { Search } from "lucide-react";
 
 const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
+
 const ProductList = () => {
-  const { addToCart } = useCart();//Lấy hàm thêm vào giỏ hàng từ Context để dùng ở các nút bấm.
-  //biến lưu trữu toàn bộ sản phẩm và danh mục lấy từ API
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [sortBy, setSortBy] = useState("newest");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
+  // 1. KẾT NỐI GIỎ HÀNG: Lấy hàm addToCart từ Context để dùng cho nút "Thêm vào giỏ"
+  const { addToCart } = useCart();
 
-  const [apiCategories, setApiCategories] = useState([]);
-  const [apiProducts, setApiProducts] = useState([]); 
+  // 2. KHAI BÁO CÁC STATE QUẢN LÝ BỘ LỌC
+  const [selectedCategory, setSelectedCategory] = useState("all"); // Lọc theo danh mục
+  const [sortBy, setSortBy] = useState("newest"); // Kiểu sắp xếp
+  const [searchQuery, setSearchQuery] = useState(""); // Từ khóa tìm kiếm
+  const [currentPage, setCurrentPage] = useState(1); // Đang ở trang số mấy
+  const itemsPerPage = 8; // Quy định mỗi trang chỉ hiện 8 món
 
+  // 3. STATE LƯU TRỮ DỮ LIỆU TỪ API
+  const [apiCategories, setApiCategories] = useState([]); // Chứa danh mục từ Backend
+  const [apiProducts, setApiProducts] = useState([]); // Chứa toàn bộ SP từ Backend
+
+  // 4. GỌI API KHI VỪA MỞ TRANG (Chạy 1 lần duy nhất nhờ mảng rỗng [])
   useEffect(() => {
     const fetchData = async () => {
       try {
-        //lấy danh mục và sản phẩm từ API
+        // Lấy danh mục
         const catResponse = await fetch(`${BASE_URL}/categories`);
-        // đưa vào state
         if (catResponse.ok) setApiCategories(await catResponse.json());
+        
+        // Lấy sản phẩm
         const prodResponse = await fetch(`${BASE_URL}/products`);
         if (prodResponse.ok) setApiProducts(await prodResponse.json());
       } catch (error) {
@@ -31,57 +37,63 @@ const ProductList = () => {
     };
     fetchData();
   }, []);
-  // bộ loc và sắp xếp sản phẩm dựa trên các tiêu chí đã chọn, sử dụng useMemo
+
+  // 5. BỘ NÃO XỬ LÝ LỌC & SẮP XẾP (Dùng useMemo để tối ưu hiệu năng)
+  // useMemo giúp React ghi nhớ kết quả tính toán, chỉ tính lại khi 1 trong 4 biến ở mảng cuối thay đổi.
   const filteredProducts = useMemo(() => {
-    //Tạo một bản sao từ danh sách gốc để bắt đầu lọc
-    let filtered = [...apiProducts];
+    let filtered = [...apiProducts]; // Tạo bản sao để không làm hỏng dữ liệu gốc
+
+    // Bước A: Lọc theo Danh mục
     if (selectedCategory !== "all") {
       filtered = filtered.filter((p) => {
+        // Phòng hờ API trả về object category hoặc string category
         const catName = p.category?.name || p.category;
         return catName === selectedCategory;
       });
     }
-    // Nếu có truy vấn tìm kiếm, lọc thêm dựa trên tên và mô tả sản phẩm
+
+    // Bước B: Lọc theo Thanh tìm kiếm (Tìm trong tên hoặc mô tả)
     if (searchQuery.trim()) {
-      filtered = filtered.filter(
-        (p) =>
+      filtered = filtered.filter((p) =>
           p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           p.description?.toLowerCase().includes(searchQuery.toLowerCase()),
       );
     }
 
+    // Bước C: Sắp xếp
     switch (sortBy) {
       case "price-low":
-        filtered.sort((a, b) => a.price - b.price);
+        filtered.sort((a, b) => a.price - b.price); // Giá tăng dần
         break;
       case "price-high":
-        filtered.sort((a, b) => b.price - a.price);
+        filtered.sort((a, b) => b.price - a.price); // Giá giảm dần
         break;
       case "name":
-        filtered.sort((a, b) => a.name.localeCompare(b.name, "vi"));
+        filtered.sort((a, b) => a.name.localeCompare(b.name, "vi")); // Tên A-Z theo tiếng Việt
         break;
       case "newest":
       default:
-        filtered.sort((a, b) => b.id - a.id);
+        filtered.sort((a, b) => b.id - a.id); // Mới nhất (ID lớn xếp trước)
         break;
     }
 
-    return filtered;
+    return filtered; // Trả về danh sách đã được xử lý xong
   }, [selectedCategory, sortBy, searchQuery, apiProducts]);
 
-  //phân trang
-  // kiểm tra số trang
-  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  // 6. THUẬT TOÁN PHÂN TRANG (Pagination)
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage); // Tính tổng số trang (làm tròn lên)
+  
+  // Dùng hàm .slice() để cắt đúng 8 sản phẩm cho trang hiện tại
   const paginatedProducts = filteredProducts.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage,
+    (currentPage - 1) * itemsPerPage, // Vị trí bắt đầu
+    currentPage * itemsPerPage        // Vị trí kết thúc
   );
 
+  // 7. XỬ LÝ KHI BẤM NÚT THÊM VÀO GIỎ Ở TRANG DANH SÁCH
   const handleAddToCart = (product, e) => {
-    e.preventDefault();
-    
-    e.stopPropagation();
-    addToCart(product);// gọi hàm thêm sản phẩm vào giỏ hàng từ context
+    e.preventDefault(); 
+    e.stopPropagation(); // QUAN TRỌNG: Ngăn không cho click này lan ra ngoài (gây ra việc vô tình chuyển sang trang Chi tiết)
+    addToCart(product);
   };
 
   return (
@@ -118,10 +130,10 @@ const ProductList = () => {
                   {cat.name}
                 </button>
               </li>
-            ))}
+            ))} 
           </ul>
         </div>
-          //tìm kiếm và sắp xếp
+          {/*tìm kiếm và sắp xếp*/}
         <div className="flex flex-wrap items-center justify-between gap-4 bg-secondary border-inner p-4 mb-10 shadow-sm">
           <div className="flex items-center space-x-3 z-10 relative">
             <span className="font-heading uppercase text-dark font-bold">

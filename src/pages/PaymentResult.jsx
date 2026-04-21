@@ -7,21 +7,21 @@ const PaymentResult = () => {
   const { clearCart } = useCart(); 
   const location = useLocation();
   
-  // 1. Lấy mã phản hồi từ VNPay hoặc tham số trên URL
+  // 1. NHẶT MÃ ĐƠN HÀNG TRÊN URL
+  // PayOS sẽ trả về các tham số trên đường dẫn (VD: ?orderId=123&vnp_ResponseCode=00)
   const queryParams = new URLSearchParams(location.search);
   const vnpResponseCode = queryParams.get("vnp_ResponseCode");
   
-  // 2. Nhặt mã đơn hàng từ nhiều nguồn để luôn hiển thị đúng cho khách
+  // Rào chắn nhiều nguồn: Ưu tiên orderId trong state (COD), nếu không có thì lấy trên URL (Online)
   const orderId = location.state?.orderId || queryParams.get("orderId") || queryParams.get("vnp_TxnRef") || "Đang cập nhật...";
 
+  // 2. DỌN DẸP GIỎ HÀNG
   useEffect(() => {
-    // 3. Logic xác nhận thành công: Nếu có orderId (COD) hoặc mã VNPay là '00'
+    // Xác định giao dịch thành công khi: Có orderId (COD) HOẶC mã trả về là '00' (VNPay/PayOS)
     const isSuccess = location.state?.orderId || vnpResponseCode === "00";
 
     if (isSuccess) {
-      // Dọn dẹp giỏ hàng ngay lập tức để tránh khách đặt trùng đơn
-      clearCart(); 
-      console.log("Đã dọn dẹp giỏ hàng sau khi thanh toán thành công!");
+      clearCart(); // Dọn giỏ hàng để khách đặt đơn mới
     }
   }, [location, vnpResponseCode, clearCart]);
 

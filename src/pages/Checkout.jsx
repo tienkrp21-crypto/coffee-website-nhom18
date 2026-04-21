@@ -2,41 +2,37 @@
 import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { Link, useNavigate } from 'react-router-dom';
-import { CheckCircle, CreditCard, Wallet, Banknote } from 'lucide-react';
+import { CheckCircle, Wallet, Banknote } from 'lucide-react';
 import LoadingPage from '../components/LoadingPage';
 
-// Địa chỉ Server Backend trên Render
 const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
 
 const Checkout = () => {
   const { cartItems, clearCart } = useCart(); 
   const navigate = useNavigate();
   
+  // 1. STATE LƯU THÔNG TIN KHÁCH HÀNG
   const [formData, setFormData] = useState({
-    fullName: '', 
-    phone: '', 
-    email: '', 
-    address: '', 
-    note: ''
+    fullName: '', phone: '', email: '', address: '', note: ''
   });
 
-  // Mặc định chọn cod (viết thường để quản lý state nội bộ)
   const [paymentMethod, setPaymentMethod] = useState('cod');
   const [loading, setLoading] = useState(false);
 
+  // Tính tổng tiền từ giỏ hàng (Chưa tính ship)
   const totalPrice = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const shippingFee = 30000; 
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  // 2. HÀM CHỐT ĐƠN QUAN TRỌNG NHẤT
   const handlePlaceOrder = async (e) => {
     e.preventDefault(); 
     setLoading(true);
 
-    // 1. Kiểm tra đăng nhập
+    // BƯỚC A: Kiểm tra xem đã đăng nhập chưa (Phải có user id mới cho đặt hàng)
     const savedUser = localStorage.getItem('user');
     if (!savedUser) {
         alert("Sếp ơi, sếp phải đăng nhập mới đặt hàng được nhé!");
@@ -45,18 +41,18 @@ const Checkout = () => {
         return;
     }
     const userObj = JSON.parse(savedUser);
-    const currentUserId = userObj.id; 
 
-    // 2. Chuyển đổi phương thức thanh toán sang IN HOA theo yêu cầu Backend 
+    // BƯỚC B: Chuyển 'cod' thành 'COD' hoặc 'payos' thành 'PAYOS' cho đúng ý Backend
     const mappedPaymentMethod = paymentMethod.toUpperCase();
 
-    // 3. Đóng gói dữ liệu chuẩn JSON [cite: 7-17]
+    // BƯỚC C: Đóng gói hộp quà JSON theo đúng hợp đồng API của Tiến
     const orderData = {
-      userId: currentUserId,
+      userId: userObj.id,
       receiverName: formData.fullName,
       receiverPhone: formData.phone,
       shippingAddress: formData.address,
       paymentMethod: mappedPaymentMethod, 
+      // Chỉ gửi lên mảng chứa mã sản phẩm và số lượng (tránh gửi cục data quá to)
       items: cartItems.map(item => ({
         productId: item.id,
         quantity: item.quantity
@@ -64,7 +60,7 @@ const Checkout = () => {
     };
 
     try {
-      // 4. Gọi API POST /checkout [cite: 5]
+      // BƯỚC D: Gửi data lên máy chủ
       const response = await fetch(`${BASE_URL}/checkout`, { 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -74,21 +70,21 @@ const Checkout = () => {
       if (response.ok) {
         const result = await response.json();
         
-        // 5. Xử lý phản hồi (Nếu có link thanh toán thì chuyển hướng) [cite: 22, 28]
+        // BƯỚC E: Xử lý chia luồng
         if (result.paymentUrl) {
+            // Luồng 1: Nếu chọn PayOS, Backend sẽ trả về 1 cái link. Sếp phải đá khách sang link đó.
             window.location.href = result.paymentUrl;
         } else {
-            // Trường hợp COD (paymentUrl null) [cite: 25-26]
-            if (clearCart) clearCart(); 
+            // Luồng 2: Nếu chọn COD, không có link. Đơn thành công ngay.
+            if (clearCart) clearCart(); // Xóa giỏ hàng
             alert("Đặt hàng thành công! Đơn hàng của bạn đang được xử lý.");
-            navigate('/order-history'); 
+            navigate('/order-history'); // Dẫn về Lịch sử mua hàng
         }
       } else {
         const errorMsg = await response.text();
         alert(`Lỗi đặt hàng: ${errorMsg}`);
       }
     } catch (error) {
-      console.error(error); 
       alert("Lỗi mạng: Không thể kết nối với server thanh toán!");
     } finally {
       setLoading(false);
@@ -108,7 +104,6 @@ const Checkout = () => {
 
   return (
     <div className="font-sans text-gray-600 bg-white pb-20">
-      {/* HEADER */}
       <div className="container-fluid bg-dark p-12 mb-12 flex items-center justify-center relative shadow-lg"
         style={{ backgroundImage: 'linear-gradient(rgba(43, 40, 37, .8), rgba(43, 40, 37, .8)), url("https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=1920")', backgroundSize: 'cover' }}>
         <div className="text-center z-10 py-10">
@@ -118,8 +113,6 @@ const Checkout = () => {
 
       <div className="container mx-auto px-4 max-w-6xl">
         <form onSubmit={handlePlaceOrder} className="flex flex-col lg:flex-row gap-10">
-          
-          {/* CỘT TRÁI: THÔNG TIN KHÁCH HÀNG */}
           <div className="w-full lg:w-2/3">
             <div className="bg-[#FAF3EB] p-10 shadow-xl border-t-4 border-primary">
               <h3 className="font-serif text-3xl text-dark mb-8 border-b border-gray-200 pb-4 italic">Thông tin giao hàng</h3>
@@ -141,15 +134,14 @@ const Checkout = () => {
               </div>
 
               <h3 className="font-serif text-2xl text-dark mb-6 mt-8 italic">Chọn phương thức thanh toán</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Đã chuyển thành 2 cột vì bỏ VNPay */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <PaymentOption id="cod" label="Tiền mặt (COD)" icon={<Banknote size={18}/>} current={paymentMethod} set={setPaymentMethod} />
                 <PaymentOption id="payos" label="Cổng PayOS" icon={<Wallet size={18}/>} current={paymentMethod} set={setPaymentMethod} />
-                <PaymentOption id="vnpay" label="Ví VNPay" icon={<CreditCard size={18}/>} current={paymentMethod} set={setPaymentMethod} />
               </div>
             </div>
           </div>
           
-          {/* CỘT PHẢI: TÓM TẮT ĐƠN HÀNG */}
           <div className="w-full lg:w-1/3">
             <div className="bg-dark text-white p-8 sticky top-28 shadow-2xl border-b-4 border-primary">
               <h3 className="font-serif text-2xl text-primary mb-6 border-b border-gray-700 pb-4 italic">Đơn hàng của bạn</h3>
@@ -200,7 +192,6 @@ const Checkout = () => {
   );
 };
 
-// Component con cho từng lựa chọn thanh toán
 const PaymentOption = ({ id, label, icon, current, set }) => (
   <label className={`flex flex-col items-center justify-center p-4 border-2 cursor-pointer transition-all gap-2 ${current === id ? 'border-primary bg-primary/5' : 'border-gray-100 bg-white hover:border-primary/20'}`}>
     <input type="radio" checked={current === id} onChange={() => set(id)} className="hidden" />

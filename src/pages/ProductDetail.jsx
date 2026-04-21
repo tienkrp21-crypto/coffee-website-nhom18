@@ -6,27 +6,41 @@ import { ShoppingCart, ChevronLeft, Check } from "lucide-react";
 const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
 
 const ProductDetail = () => {
+  // 1. LẤY ID TỪ URL: Ví dụ URL là /product/5 -> lấy được số 5
   const { id } = useParams();
+  
+  // Lấy hàm thêm giỏ hàng từ Context
   const { addToCart } = useCart();
-  const [product, setProduct] = useState(null);// chứathông tin sản phẩm được lấy từ API
-  const [loading, setLoading] = useState(true);// trạng thái để hiển thị khi đang tải dữ liệu
-  //Hàm fetchProduct sẽ tự động chạy lại ngay lập tức nếu giá trị 'id' trên URL thay đổi
+  
+  // 2. STATE QUẢN LÝ DỮ LIỆU
+  const [product, setProduct] = useState(null); // Hố chứa thông tin 1 sản phẩm (ban đầu rỗng)
+  const [loading, setLoading] = useState(true); // Trạng thái tải màn hình
+
+  // 3. GỌI API LẤY ĐÍCH DANH SẢN PHẨM THEO ID
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/products/${id}`); // chỉ lấy ID
+        // Nối ID vào cuối đường link API để hỏi Backend
+        const response = await fetch(`${BASE_URL}/products/${id}`); 
+        
+        // Nếu Backend báo lỗi (vd: nhập mã ID tào lao) thì ném ra lỗi để nhảy xuống catch
         if (!response.ok) throw new Error("Không tìm thấy sản phẩm");
-        const data = await response.json();// đổ dữ liệu vào biến data
+        
+        // Mở gói quà JSON và đổ vào state
+        const data = await response.json();
         setProduct(data);
       } catch (error) {
         console.error("Lỗi:", error);
-        setProduct(null);
+        setProduct(null); // Cho product = null để lát giao diện báo "Sản phẩm không tồn tại"
       } finally {
-        setLoading(false); 
+        setLoading(false); // Dù thành công hay thất bại cũng phải tắt màn hình "Đang tải"
       }
     };
     fetchProduct();
-  }, [id]);
+  }, [id]); // Phụ thuộc vào [id]: Nếu đang xem món này mà bấm sang món khác, tự động chạy lại hàm này.
+
+  // 4. KIỂM SOÁT LỖI HIỂN THỊ (Conditional Rendering)
+  // Bước chặn 1: Đang chờ dữ liệu bay từ máy chủ về
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-secondary">
@@ -34,6 +48,8 @@ const ProductDetail = () => {
       </div>
     );
   }
+  
+  // Bước chặn 2: Máy chủ báo không có món này
   if (!product) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-secondary">
