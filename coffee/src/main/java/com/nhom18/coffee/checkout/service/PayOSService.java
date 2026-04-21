@@ -34,8 +34,8 @@ public class PayOSService {
     @Value("${payos.checksumKey}")
     private String checksumKey;
 
-    private static final String returnUrl = "http://localhost:3000/thanh-toan-thanh-cong"; 
-    private static final String cancelUrl = "http://localhost:3000/thanh-toan-huy";
+    private static final String returnUrl = "https://coffee-website-nhom18.vercel.app/thanh-toan-thanh-cong"; 
+    private static final String cancelUrl = "https://coffee-website-nhom18.vercel.app/thanh-toan-huy";
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper mapper = new ObjectMapper();
