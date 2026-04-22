@@ -1,26 +1,41 @@
 import React, { useState } from 'react';
-import { products } from '../data/products';
+import { products } from '../data/products'; // Lấy dữ liệu sản phẩm mẫu để hiện ở trang chủ
 import { Link } from 'react-router-dom';
-import { useCart } from '../context/CartContext';
+import { useCart } from '../context/CartContext'; // Kết nối với giỏ hàng chung
 // eslint-disable-next-line no-unused-vars
-import { motion } from 'framer-motion';
+import { motion } from 'framer-motion'; // Thư viện tạo hiệu ứng chuyển động cực mạnh
 import { Truck, CreditCard, Coffee, Mail, ArrowRight } from 'lucide-react';
 
+// 1. ĐỊNH NGHĨA HIỆU ỨNG (ANIMATION VARIANTS)
+// Hiệu ứng hiện dần từ dưới lên
 const fadeUpVariants = {
-  hidden: { opacity: 0, y: 40 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } }
+  hidden: { opacity: 0, y: 40 }, // Ban đầu mờ (opacity 0) và nằm thấp hơn 40 pixel
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    transition: { duration: 0.8, ease: "easeOut" } // Hiện lên trong 0.8 giây, chậm dần ở cuối
+  }
 };
 
+// Hiệu ứng hiện lần lượt các phần tử con (Stagger)
 const staggerVariants = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.2 } }
+  visible: { 
+    opacity: 1, 
+    transition: { staggerChildren: 0.2 } // Thằng con đầu hiện xong, 0.2 giây sau thằng tiếp theo mới hiện
+  }
 };
 
 const Home = () => {
+  // 2. QUẢN LÝ TRẠNG THÁI (STATE)
+  // Quản lý tab đang chọn (ví dụ: Cà phê, Trà, Bánh)
   const [activeTab, setActiveTab] = useState('coffee');
+  
+  // Quản lý việc đóng/mở Video quảng cáo ở trang chủ
   const [isVideoOpen, setIsVideoOpen] = useState(false);
+  
+  // Lấy hàm thêm vào giỏ hàng để dùng cho các sản phẩm nổi bật
   const { addToCart } = useCart();
-
   return (
     <div className="font-sans text-gray-600 bg-white">
       

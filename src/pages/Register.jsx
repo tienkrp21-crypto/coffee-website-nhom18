@@ -1,33 +1,38 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
+// 1. Địa chỉ máy chủ Backend (Tiến/Biện cung cấp)
 const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
 
 const Register = () => {
+  // 2. Dùng để chuyển hướng trang (ví dụ: đăng ký xong tự sang trang Login)
   const navigate = useNavigate();
+  
+  // 3. Khởi tạo "hộp chứa" dữ liệu người dùng nhập vào
   const [formData, setFormData] = useState({
     fullName: '', email: '', phone: '', password: ''
   });
 
-  // Hàm cập nhật dữ liệu khi sếp gõ phím
+  // 4. HÀM CẬP NHẬT DỮ LIỆU: Tự động nhặt phím sếp gõ để bỏ vào formData
   const handleChange = (e) => {
+    // [e.target.name] giúp xác định sếp đang gõ ở ô fullName, email hay phone...
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // 5. HÀM XỬ LÝ KHI BẤM NÚT ĐĂNG KÝ
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Chặn trang web load lại từ đầu khi gửi Form
 
-    // ==========================================
-    // 🛡️ BẢO VỆ DỮ LIỆU (VALIDATION) - PHẦN THẦY HAY HỎI NHẤT
-    // ==========================================
+    // --- PHẦN RÀNG BUỘC (VALIDATION) - "HÀNG RÀO" BẢO VỆ DỮ LIỆU ---
     
-    // Regex: Chỉ cho phép chữ cái (tiếng Việt có dấu) và dấu cách. Tối thiểu 3 ký tự.
+    // Chỉ cho phép chữ cái và khoảng trắng, ít nhất 3 ký tự
     const nameRegex = /^[a-zA-ZÀ-ỹ\s]{3,}$/; 
-    // Regex: Bắt đầu bằng số 0, sau đó là đúng 9 chữ số. Tổng cộng 10 số.
+    // Phải bắt đầu bằng số 0 và đủ 10 chữ số
     const phoneRegex = /^0\d{9}$/; 
-    // Regex: Ít nhất 8 ký tự, PHẢI CÓ ÍT NHẤT 1 CHỮ CÁI VIẾT HOA.
+    // Ít nhất 8 ký tự và PHẢI CÓ 1 CHỮ IN HOA
     const passRegex = /^(?=.*[A-Z]).{8,}$/; 
 
+    // Kiểm tra từng ô, nếu sai thì báo "alert" và dừng lại không gửi lên server
     if (!nameRegex.test(formData.fullName.trim())) {
       return alert("Vui lòng nhập đúng Họ và tên!");
     }
@@ -38,18 +43,19 @@ const Register = () => {
       return alert("Mật khẩu cần ít nhất 8 ký tự và 1 chữ IN HOA!");
     }
 
-    // GỌI API ĐĂNG KÝ SAU KHI DỮ LIỆU ĐÃ SẠCH
+    // --- GỌI API GỬI DỮ LIỆU LÊN BACKEND ---
     try {
       const response = await fetch(`${BASE_URL}/users/register`, {
-        method: 'POST',
+        method: 'POST', // Dùng POST để gửi thông tin bảo mật
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData) // Chuyển Object thành chuỗi JSON để truyền đi
       });
 
       if (response.ok) {
         alert("Đăng ký thành công!");
-        navigate('/login'); // Đuổi sếp sang trang Đăng nhập
+        navigate('/login'); // Chuyển khách sang trang Đăng nhập
       } else {
+        // Nếu Backend báo lỗi (ví dụ: trùng Email), in thông báo đó ra
         const errorMsg = await response.text();
         alert(errorMsg || "Đăng ký thất bại!");
       }

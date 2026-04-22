@@ -1,44 +1,58 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Phone, Edit2, Save, LogOut, ArrowLeft, Package } from 'lucide-react'; // Thêm Package icon
+import { User, Mail, Phone, Edit2, Save, LogOut, ArrowLeft, Package } from 'lucide-react'; 
 import LoadingPage from '../components/LoadingPage'; 
 import { useCart } from '../context/CartContext';
 
+// Địa chỉ máy chủ để gọi API (nếu cần cập nhật thông tin)
 const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
 
 const Profile = () => {
-  const navigate = useNavigate();
-  const { clearCart } = useCart();
-  const [isEditing, setIsEditing] = useState(false);
-  const [userData, setUserData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate(); // Công cụ để điều hướng trang
+  const { clearCart } = useCart(); // Lấy hàm xóa giỏ hàng từ "bộ não" Context
+  
+  // 1. CÁC TRẠNG THÁI (STATE) QUẢN LÝ GIAO DIỆN
+  const [isEditing, setIsEditing] = useState(false); // Đang xem hay đang sửa thông tin?
+  const [userData, setUserData] = useState(null);    // Dữ liệu người dùng lấy từ bộ nhớ
+  const [loading, setLoading] = useState(true);      // Trạng thái chờ khi đang tải dữ liệu
 
+  // 2. KIỂM TRA ĐĂNG NHẬP (Chạy ngay khi vừa mở trang)
   useEffect(() => {
+    // Tìm xem trong "ngăn kéo" trình duyệt có thông tin user không
     const savedUser = localStorage.getItem('user');
     
     if (!savedUser) {
+      // Nếu rỗng -> Chưa đăng nhập -> Đuổi về trang Login ngay lập tức
       navigate('/login');
       return;
     }
 
     try {
+      // Nếu có -> Chuyển chuỗi chữ thành Object để React đọc được và hiện lên màn hình
       const user = JSON.parse(savedUser);
       setUserData(user);
     } catch (error) {
       console.error("Lỗi đọc dữ liệu user:", error);
       navigate('/login');
     } finally {
+      // Đợi 0.8 giây cho mượt rồi mới tắt màn hình Loading
       setTimeout(() => setLoading(false), 800);
     }
   }, [navigate]);
 
+  // 3. HÀM XỬ LÝ ĐĂNG XUẤT (LOGOUT)
   const handleLogout = () => {
+    // Xóa sạch thông tin đăng nhập trong máy
     localStorage.removeItem('user');
-    clearCart(); // <- DÒNG MỚI THÊM: Xóa sạch giỏ hàng trên giao diện!
+    
+    // QUAN TRỌNG: Xóa sạch giỏ hàng hiện tại để người dùng sau không thấy món của sếp
+    clearCart(); 
+    
     alert('Đăng xuất thành công! Hẹn gặp lại bạn tại CafeMaterial.');
-    navigate('/');
+    navigate('/'); // Quay về trang chủ sạch sẽ
   };
 
+  // Nếu đang tải, hiện trang Loading lung linh đã chuẩn bị sẵn
   if (loading) return <LoadingPage />;
 
   return (

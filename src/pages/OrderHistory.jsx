@@ -3,33 +3,40 @@ import { Package, XCircle, ArrowLeft, History } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import LoadingPage from '../components/LoadingPage';
 
+// 1. Link máy chủ Backend để lấy dữ liệu đơn hàng
 const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
 
 const OrderHistory = () => {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [orders, setOrders] = useState([]); // Hố chứa danh sách đơn hàng
+  const [loading, setLoading] = useState(true); // Trạng thái chờ tải dữ liệu
   const navigate = useNavigate();
 
+  // 2. TỰ ĐỘNG LẤY LỊCH SỬ ĐƠN HÀNG KHI MỞ TRANG
   useEffect(() => {
     const fetchOrders = async () => {
-      // 1. Kiểm tra quyền truy cập
+      // BƯỚC A: Kiểm tra xem sếp đã đăng nhập chưa?
       const savedUser = localStorage.getItem('user');
       if (!savedUser) {
+        // Nếu chưa -> Đá về trang Login để bảo mật dữ liệu
         navigate('/login');
         return;
       }
       
       try {
-        const userObj = JSON.parse(savedUser);
-        // 2. Móc API lấy lịch sử theo userId chuẩn Backend
+        const userObj = JSON.parse(savedUser); // Chuyển thông tin user từ chuỗi sang Object
+        
+        // BƯỚC B: Gọi API lấy đúng đơn hàng của User này thông qua id
+        // Đây là phương thức GET mặc định của fetch
         const response = await fetch(`${BASE_URL}/orders/history/${userObj.id}`);
+        
         if (response.ok) {
-          const data = await response.json();
-          setOrders(data);
+          const data = await response.json(); // Nhận danh sách đơn hàng từ Backend
+          setOrders(data); // Đổ dữ liệu vào giao diện
         }
       } catch (error) {
         console.error("Lỗi lấy lịch sử đơn hàng:", error);
       } finally {
+        // Đợi 0.6 giây cho hiệu ứng loading đẹp mắt rồi mới hiện đơn hàng
         setTimeout(() => setLoading(false), 600);
       }
     };
@@ -37,27 +44,33 @@ const OrderHistory = () => {
     fetchOrders();
   }, [navigate]);
 
-  // 3. Logic Hủy đơn hàng theo mã ID
+  // 3. HÀM XỬ LÝ HỦY ĐƠN HÀNG
   const handleCancelOrder = async (orderId) => {
+    // Luôn luôn phải hỏi khách cho chắc chắn trước khi thực hiện hành động xóa/hủy
     if (!window.confirm("Sếp có chắc chắn muốn hủy đơn hàng này không?")) return;
     
     try {
+      // GỌI API CẬP NHẬT TRẠNG THÁI (Dùng PUT để sửa dữ liệu đơn hàng)
       const response = await fetch(`${BASE_URL}/orders/${orderId}/cancel`, {
         method: 'PUT'
       });
-      const msg = await response.text();
+      
+      const msg = await response.text(); // Lấy thông báo phản hồi từ Tiến/Biện
       
       if (response.ok) {
         alert("Đã hủy đơn hàng thành công!");
-        window.location.reload(); // Tải lại để cập nhật trạng thái mới nhất
+        // Tải lại trang (F5) để giao diện cập nhật trạng thái mới nhất từ Database
+        window.location.reload(); 
       } else {
         alert(msg || "Không thể hủy đơn hàng này.");
       }
+    // eslint-disable-next-line no-unused-vars
     } catch (error) {
       alert("Lỗi kết nối khi hủy đơn!");
     }
   };
 
+  // Trả về giao diện Loading nếu đang chờ API phản hồi
   if (loading) return <LoadingPage />;
 
   return (
