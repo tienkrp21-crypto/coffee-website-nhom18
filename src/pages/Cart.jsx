@@ -3,7 +3,6 @@ import { useCart } from '../context/CartContext';
 import { Trash2, ChevronLeft, ShoppingBag } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-// Đã thêm BASE_URL để nối link ảnh từ Backend
 const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
 
 const Cart = () => {

@@ -14,6 +14,40 @@ const ProductForm = ({
   const [categories, setCategories] = useState([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [categoriesError, setCategoriesError] = useState(null);
+  const [errors, setErrors] = useState({});
+
+  const validateForm = () => {
+    const validationErrors = {};
+
+    if (!formData.name?.trim())
+      validationErrors.name = "Tên sản phẩm là bắt buộc.";
+    if (!formData.categoryId)
+      validationErrors.categoryId = "Danh mục là bắt buộc.";
+    if (!formData.price && formData.price !== 0)
+      validationErrors.price = "Giá là bắt buộc.";
+    else if (Number(formData.price) <= 0)
+      validationErrors.price = "Giá phải lớn hơn 0.";
+    if (!formData.stockQuantity && formData.stockQuantity !== 0)
+      validationErrors.stockQuantity = "Tồn kho là bắt buộc.";
+    else if (Number(formData.stockQuantity) < 0)
+      validationErrors.stockQuantity = "Tồn kho không thể là số âm.";
+    if (!formData.unit?.trim()) validationErrors.unit = "Đơn vị là bắt buộc.";
+    if (formData.imageUrl?.trim()) {
+      try {
+        new URL(formData.imageUrl);
+      } catch {
+        validationErrors.imageUrl = "URL hình ảnh không hợp lệ.";
+      }
+    }
+
+    setErrors(validationErrors);
+    return Object.keys(validationErrors).length === 0;
+  };
+
+  const handleSubmit = () => {
+    if (!validateForm()) return;
+    handleSave();
+  };
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -44,8 +78,24 @@ const ProductForm = ({
   }, []);
 
   useEffect(() => {
-    if (!categoriesLoading && categories.length > 0 && !formData.categoryId) {
-      setFormData({ ...formData, categoryId: categories[0].id });
+    if (!categoriesLoading && categories.length > 0) {
+      if (!formData.categoryId) {
+        setFormData({
+          ...formData,
+          categoryId: categories[0].id,
+          categoryName: categories[0].name,
+        });
+      } else if (!formData.categoryName) {
+        const selectedCategory = categories.find(
+          (category) => String(category.id) === String(formData.categoryId)
+        );
+        if (selectedCategory) {
+          setFormData({
+            ...formData,
+            categoryName: selectedCategory.name,
+          });
+        }
+      }
     }
   }, [categoriesLoading, categories, formData, setFormData]);
 
@@ -82,85 +132,132 @@ const ProductForm = ({
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-          <input
-            type="text"
-            placeholder="Tên sản phẩm"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
-            disabled={saving}
-          />
-          <input
-            type="text"
-            placeholder="Mã SKU"
-            value={formData.sku}
-            onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
-            disabled={saving}
-          />
-          <select
-            value={formData.categoryId}
-            onChange={(e) =>
-              setFormData({ ...formData, categoryId: e.target.value })
-            }
-            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
-            disabled={saving || categoriesLoading}
-          >
-            {categoriesLoading ? (
-              <option value="" disabled>
-                Đang tải danh mục...
-              </option>
-            ) : (
-              categoryOptions.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))
+          <div className="space-y-1">
+            <input
+              type="text"
+              placeholder="Tên sản phẩm"
+              value={formData.name}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
+              className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
+              disabled={saving}
+            />
+            {errors.name && (
+              <p className="text-xs text-red-600">{errors.name}</p>
             )}
-          </select>
-          {categoriesError && (
-            <div className="col-span-1 sm:col-span-2 text-xs sm:text-sm text-red-600">
-              {categoriesError}
-            </div>
-          )}
-          <input
-            type="number"
-            placeholder="Giá"
-            value={formData.price}
-            onChange={(e) =>
-              setFormData({ ...formData, price: e.target.value })
-            }
-            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
-            disabled={saving}
-          />
-          <input
-            type="number"
-            placeholder="Tồn kho"
-            value={formData.stockQuantity}
-            onChange={(e) =>
-              setFormData({ ...formData, stockQuantity: e.target.value })
-            }
-            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
-            disabled={saving}
-          />
-          <input
-            type="text"
-            placeholder="Đơn vị"
-            value={formData.unit}
-            onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
-            disabled={saving}
-          />
-          <input
-            type="text"
-            placeholder="URL hình ảnh"
-            value={formData.imageUrl}
-            onChange={(e) =>
-              setFormData({ ...formData, imageUrl: e.target.value })
-            }
-            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
-            disabled={saving}
-          />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-semibold text-gray-500">
+              SKU tự sinh
+            </label>
+            <input
+              type="text"
+              value={formData.sku}
+              readOnly
+              className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-sm text-gray-700"
+            />
+          </div>
+          <div className="space-y-1">
+            <select
+              value={formData.categoryId}
+              onChange={(e) => {
+                const selectedCategory = categories.find(
+                  (category) => String(category.id) === e.target.value
+                );
+                setFormData({
+                  ...formData,
+                  categoryId: e.target.value,
+                  categoryName: selectedCategory?.name || "",
+                });
+              }}
+              className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
+              disabled={saving || categoriesLoading}
+            >
+              {categoriesLoading ? (
+                <option value="" disabled>
+                  Đang tải danh mục...
+                </option>
+              ) : (
+                categoryOptions.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))
+              )}
+            </select>
+            {errors.categoryId && (
+              <p className="text-xs text-red-600">{errors.categoryId}</p>
+            )}
+            {categoriesError && (
+              <div className="col-span-1 sm:col-span-2 text-xs sm:text-sm text-red-600">
+                {categoriesError}
+              </div>
+            )}
+          </div>
+          <div className="space-y-1">
+            <input
+              type="number"
+              placeholder="Giá"
+              value={formData.price}
+              onChange={(e) =>
+                setFormData({ ...formData, price: e.target.value })
+              }
+              className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
+              disabled={saving}
+            />
+            {errors.price && (
+              <p className="text-xs text-red-600">{errors.price}</p>
+            )}
+          </div>
+          <div className="space-y-1">
+            <input
+              type="number"
+              placeholder="Tồn kho"
+              value={formData.stockQuantity}
+              onChange={(e) =>
+                setFormData({ ...formData, stockQuantity: e.target.value })
+              }
+              className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
+              disabled={saving}
+            />
+            {errors.stockQuantity && (
+              <p className="text-xs text-red-600">{errors.stockQuantity}</p>
+            )}
+          </div>
+          <div className="space-y-1">
+            <input
+              type="text"
+              placeholder="Đơn vị"
+              value={formData.unit}
+              onChange={(e) =>
+                setFormData({ ...formData, unit: e.target.value })
+              }
+              className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
+              disabled={saving}
+            />
+            {errors.unit && (
+              <p className="text-xs text-red-600">{errors.unit}</p>
+            )}
+          </div>
+          <div className="space-y-1">
+            <input
+              type="text"
+              placeholder="URL hình ảnh"
+              value={formData.imageUrl}
+              onChange={(e) =>
+                setFormData({ ...formData, imageUrl: e.target.value })
+              }
+              className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
+              disabled={saving}
+            />
+            {errors.imageUrl && (
+              <p className="text-xs text-red-600">{errors.imageUrl}</p>
+            )}
+            <p className="text-xs text-gray-500">
+              URL hình ảnh có thể để trống.
+            </p>
+          </div>
           <textarea
             placeholder="Mô tả"
             value={formData.description}
@@ -174,7 +271,7 @@ const ProductForm = ({
         </div>
         <div className="flex gap-2 mt-4 flex-wrap">
           <button
-            onClick={handleSave}
+            onClick={handleSubmit}
             disabled={saving}
             className="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-bold py-2 px-4 rounded transition-colors text-sm"
           >

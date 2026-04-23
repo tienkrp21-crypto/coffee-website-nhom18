@@ -82,13 +82,13 @@ export default function AdminLogin() {
         </form>
 
         <div className="mt-6 pt-6 border-t border-orange-200">
-          <p className="text-center text-sm text-orange-600">
+          {/* <p className="text-center text-sm text-orange-600">
             <strong>Demo Account:</strong>
             <br />
             Username: admin
             <br />
             Password: admin123
-          </p>
+          </p> */}
         </div>
       </div>
     </div>

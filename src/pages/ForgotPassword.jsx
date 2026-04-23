@@ -34,7 +34,7 @@ const ForgotPassword = () => {
         body: JSON.stringify({ email: email })
       });
       
-      // FIX LỖI: Vì Backend trả về String nên dùng .text() thay vì .json()
+      // Backend trả về String nên dùng .text() thay vì .json()
       const message = await response.text(); 
       
       if (response.ok) {
@@ -64,7 +64,7 @@ const ForgotPassword = () => {
         body: JSON.stringify({ 
           email: email, 
           newPassword: newPassword, 
-          otpCode: otp // FIX LỖI: Đổi tên từ otp thành otpCode cho khớp Backend
+          otpCode: otp 
         }),
       });
 

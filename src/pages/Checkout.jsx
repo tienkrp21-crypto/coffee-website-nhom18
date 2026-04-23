@@ -27,12 +27,12 @@ const Checkout = () => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  // 2. HÀM CHỐT ĐƠN QUAN TRỌNG NHẤT
+  // 2. HÀM CHỐT ĐƠN QUAN 
   const handlePlaceOrder = async (e) => {
     e.preventDefault(); 
     setLoading(true);
 
-    // BƯỚC A: Kiểm tra xem đã đăng nhập chưa (Phải có user id mới cho đặt hàng)
+    // Kiểm tra xem đã đăng nhập chưa (Phải có user id mới cho đặt hàng)
     const savedUser = localStorage.getItem('user');
     if (!savedUser) {
         alert("Sếp ơi, sếp phải đăng nhập mới đặt hàng được nhé!");
@@ -42,17 +42,17 @@ const Checkout = () => {
     }
     const userObj = JSON.parse(savedUser);
 
-    // BƯỚC B: Chuyển 'cod' thành 'COD' hoặc 'payos' thành 'PAYOS' cho đúng ý Backend
+    //Chuyển 'cod' thành 'COD' hoặc 'payos' thành 'PAYOS' 
     const mappedPaymentMethod = paymentMethod.toUpperCase();
 
-    // BƯỚC C: Đóng gói hộp quà JSON theo đúng hợp đồng API của Tiến
+    // Đóng gói hộp quà JSON theo đúng hợp đồng API của Tiến
     const orderData = {
       userId: userObj.id,
       receiverName: formData.fullName,
       receiverPhone: formData.phone,
       shippingAddress: formData.address,
       paymentMethod: mappedPaymentMethod, 
-      // Chỉ gửi lên mảng chứa mã sản phẩm và số lượng (tránh gửi cục data quá to)
+      // Chỉ gửi lên mảng chứa mã sản phẩm và số lượng 
       items: cartItems.map(item => ({
         productId: item.id,
         quantity: item.quantity
@@ -60,7 +60,7 @@ const Checkout = () => {
     };
 
     try {
-      // BƯỚC D: Gửi data lên máy chủ
+      // Gửi data lên máy chủ
       const response = await fetch(`${BASE_URL}/checkout`, { 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -70,9 +70,9 @@ const Checkout = () => {
       if (response.ok) {
         const result = await response.json();
         
-        // BƯỚC E: Xử lý chia luồng
+        // Xử lý chia luồng
         if (result.paymentUrl) {
-            // Luồng 1: Nếu chọn PayOS, Backend sẽ trả về 1 cái link. Sếp phải đá khách sang link đó.
+            // Luồng 1: Nếu chọn PayOS, Backend sẽ trả về 1 cái link. 
             window.location.href = result.paymentUrl;
         } else {
             // Luồng 2: Nếu chọn COD, không có link. Đơn thành công ngay.
