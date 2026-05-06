@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import axios from "axios";
 
 export default function Categories() {
@@ -6,27 +6,55 @@ export default function Categories() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await axios.get(
-          "https://coffee-website-nhom18-admin.onrender.com/api/categories"
-        );
-        // Filter active categories (status === 1) and add productsCount
-        const activeCategories = response.data
-          .filter((category) => category.status === 1)
-          .map((category) => ({
-            ...category,
-            productsCount: 0, // API doesn't provide this, set to 0
-          }));
-        setCategories(activeCategories);
-        setLoading(false);
-      } catch {
-        setError("Không thể tải danh sách danh mục");
-        setLoading(false);
-      }
-    };
+  const fetchCategories = async () => {
+    try {
+      setLoading(true);
 
+      const categoriesResponse = await axios.get(
+        "https://coffee-website-nhom18-admin.onrender.com/api/categories"
+      );
+
+      const productsResponse = await axios.get(
+        "https://coffee-website-nhom18-admin.onrender.com/api/products?page=0&size=1000"
+      );
+
+      const productsData = productsResponse?.data;
+      const products = Array.isArray(productsData)
+        ? productsData
+        : productsData?.content || productsData?.data || [];
+
+      const productCountByCategory = {};
+      products.forEach((product) => {
+        const categoryId = product.categoryId || product.category_id;
+        if (categoryId) {
+          productCountByCategory[categoryId] =
+            (productCountByCategory[categoryId] || 0) + 1;
+        }
+      });
+
+      const categoriesData = categoriesResponse?.data;
+
+      if (!Array.isArray(categoriesData)) {
+        setCategories([]);
+        setError("Dữ liệu danh mục không hợp lệ");
+        return;
+      }
+
+      const allCategories = categoriesData.map((category) => ({
+        ...category,
+        productsCount: productCountByCategory[category.id] || 0,
+      }));
+
+      setCategories(allCategories);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setError("Không thể tải danh sách danh mục");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchCategories();
   }, []);
 
@@ -35,6 +63,8 @@ export default function Categories() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({ name: "", description: "" });
+
+  const [togglingId, setTogglingId] = useState(null);
 
   const handleAdd = () => {
     setEditingId(null);
@@ -56,40 +86,44 @@ export default function Categories() {
 
     try {
       if (editingId) {
-        // Edit existing category via API
+        const category = categories.find((c) => c.id === editingId);
+        if (!category) return;
+
         const response = await axios.put(
           `https://coffee-website-nhom18-admin.onrender.com/api/categories/${editingId}`,
           {
+            id: category.id,
             name: formData.name,
             description: formData.description,
-            status: 1, // Keep active status
+            status: category.status,
           }
         );
 
-        // Update the category in the list
         const updatedCategory = {
           ...response.data,
-          productsCount: 0, // API might not return this
+          productsCount: category.productsCount,
         };
+
         setCategories(
-          categories.map((c) => (c.id === editingId ? updatedCategory : c))
+          categories.map((c) =>
+            c.id === editingId ? updatedCategory : c
+          )
         );
       } else {
-        // Add new category via API
         const response = await axios.post(
           "https://coffee-website-nhom18-admin.onrender.com/api/categories",
           {
             name: formData.name,
             description: formData.description,
-            status: 1, // Assuming new categories are active by default
+            status: 1,
           }
         );
 
-        // Add the new category to the list
         const newCategory = {
           ...response.data,
-          productsCount: 0, // API might not return this
+          productsCount: 0,
         };
+
         setCategories([...categories, newCategory]);
       }
       setShowForm(false);
@@ -101,19 +135,49 @@ export default function Categories() {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Bạn chắc chắn muốn xóa danh mục này?")) return;
+  // 🔥 CÁCH 1: gửi FULL payload + id
+  const handleToggleStatus = async (id) => {
+    const category = categories.find((c) => c.id === id);
+    if (!category) return;
+
+    const newStatus = category.status === 1 ? 0 : 1;
+    const actionText = newStatus === 1 ? "kích hoạt" : "vô hiệu hóa";
+
+    if (!window.confirm(`Bạn chắc chắn muốn ${actionText} danh mục này?`))
+      return;
+
+    setTogglingId(id);
 
     try {
-      await axios.delete(
-        `https://coffee-website-nhom18-admin.onrender.com/api/categories/${id}`
+      const payload = {
+        id: category.id, // 🔥 QUAN TRỌNG
+        name: category.name,
+        description: category.description,
+        status: newStatus,
+      };
+
+      console.log("SEND:", payload);
+
+      const response = await axios.put(
+        `https://coffee-website-nhom18-admin.onrender.com/api/categories/${id}`,
+        payload
       );
 
-      // Remove the category from the list
-      setCategories(categories.filter((c) => c.id !== id));
+      console.log("RESPONSE:", response.data);
+
+      const updatedCategory = {
+        ...response.data,
+        productsCount: category.productsCount,
+      };
+
+      setCategories(
+        categories.map((c) => (c.id === id ? updatedCategory : c))
+      );
     } catch (error) {
-      console.error("Error deleting category:", error);
-      alert("Không thể xóa danh mục. Vui lòng thử lại.");
+      console.error("Error updating category status:", error);
+      alert("Không thể cập nhật trạng thái danh mục.");
+    } finally {
+      setTogglingId(null);
     }
   };
 
@@ -165,31 +229,34 @@ export default function Categories() {
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
                   }
-                  className="w-full px-4 py-2 border border-orange-300 rounded-lg focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-colors"
+                  className="w-full px-4 py-2 border border-orange-300 rounded-lg"
                   disabled={saving}
                 />
                 <textarea
                   placeholder="Mô tả"
                   value={formData.description}
                   onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
+                    setFormData({
+                      ...formData,
+                      description: e.target.value,
+                    })
                   }
                   rows="3"
-                  className="w-full px-4 py-2 border border-orange-300 rounded-lg focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-colors"
+                  className="w-full px-4 py-2 border border-orange-300 rounded-lg"
                   disabled={saving}
                 />
                 <div className="flex gap-2">
                   <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-bold py-2 px-4 rounded transition-all hover:scale-105 shadow-md"
+                    className="bg-green-600 text-white py-2 px-4 rounded"
                   >
                     {saving ? "Đang lưu..." : "Lưu"}
                   </button>
                   <button
                     onClick={() => setShowForm(false)}
                     disabled={saving}
-                    className="bg-gray-400 hover:bg-gray-500 disabled:bg-gray-300 text-white font-bold py-2 px-4 rounded transition-all hover:scale-105 shadow-md"
+                    className="bg-gray-400 text-white py-2 px-4 rounded"
                   >
                     Hủy
                   </button>
@@ -198,7 +265,6 @@ export default function Categories() {
             </div>
           )}
 
-          {/* Table */}
           <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-orange-200">
             <table className="w-full">
               <thead className="bg-orange-100 border-b border-orange-200">
@@ -210,6 +276,9 @@ export default function Categories() {
                     Mô tả
                   </th>
                   <th className="px-6 py-3 text-center font-semibold text-orange-800">
+                    Trạng thái
+                  </th>
+                  <th className="px-6 py-3 text-center font-semibold text-orange-800">
                     Sản phẩm
                   </th>
                   <th className="px-6 py-3 text-center font-semibold text-orange-800">
@@ -218,33 +287,46 @@ export default function Categories() {
                 </tr>
               </thead>
               <tbody>
-                {categories.map((category) => (
-                  <tr key={category.id} className="border-b border-orange-100 hover:bg-orange-50 transition-colors">
-                    <td className="px-6 py-4 font-semibold text-gray-800">
-                      {category.name}
-                    </td>
-                    <td className="px-6 py-4 text-gray-600">
-                      {category.description}
-                    </td>
-                    <td className="px-6 py-4 text-center text-gray-800 font-semibold">
-                      {category.productsCount}
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <button
-                        onClick={() => handleEdit(category)}
-                        className="bg-orange-500 hover:bg-orange-600 text-white py-1 px-3 rounded text-sm mr-2 transition-all hover:scale-105 shadow-md"
-                      >
-                        Sửa
-                      </button>
-                      <button
-                        onClick={() => handleDelete(category.id)}
-                        className="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded text-sm transition-all hover:scale-105 shadow-md"
-                      >
-                        Xóa
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {Array.isArray(categories) &&
+                  categories.map((category) => (
+                    <tr key={category.id}>
+                      <td className="px-6 py-4">{category.name}</td>
+                      <td className="px-6 py-4">{category.description}</td>
+                      <td className="px-6 py-4 text-center">
+                        {category.status === 1
+                          ? "Hoạt động"
+                          : "Vô hiệu hóa"}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {category.productsCount}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <button
+                          onClick={() => handleEdit(category)}
+                          className="bg-orange-500 text-white px-3 py-1 mr-2 rounded"
+                        >
+                          Sửa
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleToggleStatus(category.id)
+                          }
+                          disabled={togglingId === category.id}
+                          className={`px-3 py-1 rounded text-white ${
+                            category.status === 1
+                              ? "bg-red-500"
+                              : "bg-green-500"
+                          }`}
+                        >
+                          {togglingId === category.id
+                            ? "Đang xử lý..."
+                            : category.status === 1
+                            ? "Vô hiệu hóa"
+                            : "Kích hoạt"}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>

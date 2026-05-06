@@ -3,7 +3,8 @@ import { useParams, Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { ShoppingCart, ChevronLeft, Check } from "lucide-react";
 
-const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
+//const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
+const BASE_URL = 'http://localhost:8080';
 
 const ProductDetail = () => {
   // 1. LẤY ID TỪ URL: Ví dụ URL là /product/5 -> lấy được số 5

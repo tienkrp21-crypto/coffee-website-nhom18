@@ -44,19 +44,23 @@ export default function Dashboard() {
           ? ordersResponse.data.content
           : [];
 
-        // Fetch products
+        // Fetch products with pagination to get total count
         const productsResponse = await axios.get(
-          "https://coffee-website-nhom18-admin.onrender.com/api/products"
+          "https://coffee-website-nhom18-admin.onrender.com/api/products?page=0&size=10"
         );
-        const products = Array.isArray(productsResponse.data)
-          ? productsResponse.data
-          : Array.isArray(productsResponse.data?.data)
-          ? productsResponse.data.data
-          : Array.isArray(productsResponse.data?.content)
-          ? productsResponse.data.content
-          : Array.isArray(productsResponse.data?.products)
-          ? productsResponse.data.products
-          : [];
+        const productsData = productsResponse.data;
+        const totalProducts =
+          productsData?.totalElements ||
+          productsData?.total_elements ||
+          (Array.isArray(productsData)
+            ? productsData.length
+            : Array.isArray(productsData?.data)
+            ? productsData.data.length
+            : Array.isArray(productsData?.content)
+            ? productsData.content.length
+            : Array.isArray(productsData?.products)
+            ? productsData.products.length
+            : 0);
 
         // Fetch categories
         const categoriesResponse = await axios.get(
@@ -87,7 +91,7 @@ export default function Dashboard() {
         // Update stats
         setStats({
           totalOrders: orders.length,
-          totalProducts: products.length,
+          totalProducts: totalProducts,
           totalCategories: categories.length,
           totalUsers: users.length,
         });

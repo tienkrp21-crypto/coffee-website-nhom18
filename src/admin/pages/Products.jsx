@@ -5,6 +5,12 @@ import ProductForm from "../components/ProductForm";
 const API_BASE =
   "https://coffee-website-nhom18-admin.onrender.com/api/products";
 
+const generateSku = () => {
+  const timestamp = Date.now();
+  const randomPart = Math.floor(Math.random() * 900 + 100);
+  return `SKU-${timestamp}-${randomPart}`;
+};
+
 export default function Products() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,10 +20,15 @@ export default function Products() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const [allProducts, setAllProducts] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [formData, setFormData] = useState({
-    sku: "",
     name: "",
     categoryId: "",
+    categoryName: "",
     price: "",
     unit: "hộp",
     stockQuantity: "",
@@ -26,9 +37,69 @@ export default function Products() {
   });
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await axios.get(API_BASE);
+    const timeoutId = setTimeout(() => {
+      if (searchTerm.trim()) {
+        if (!isSearching) {
+          setIsSearching(true);
+          fetchProducts(0, true);
+        }
+      } else {
+        if (isSearching) {
+          setIsSearching(false);
+          fetchProducts(0, false);
+        }
+      }
+    }, 300); // Debounce 300ms
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    fetchProducts(0);
+  }, []);
+
+  const fetchProducts = async (page = 0, searchAll = false) => {
+    setLoading(true);
+    try {
+      if (searchAll) {
+        // Fetch all pages for comprehensive search
+        const allProductsData = [];
+        let currentPage = 0;
+        let hasMorePages = true;
+
+        while (hasMorePages) {
+          const response = await axios.get(
+            `${API_BASE}?page=${currentPage}&size=10`
+          );
+          const payload = Array.isArray(response.data)
+            ? response.data
+            : Array.isArray(response.data?.content)
+            ? response.data.content
+            : Array.isArray(response.data?.data)
+            ? response.data.data
+            : Array.isArray(response.data?.products)
+            ? response.data.products
+            : [];
+
+          allProductsData.push(...payload);
+
+          const totalPages =
+            response.data?.totalPages || response.data?.total_pages || 1;
+          hasMorePages = currentPage < totalPages - 1;
+          currentPage++;
+
+          // Prevent infinite loop
+          if (currentPage > 100) break;
+        }
+
+        setAllProducts(allProductsData);
+        setProducts(allProductsData);
+        setTotalPages(1);
+        setTotalElements(allProductsData.length);
+        setCurrentPage(0);
+      } else {
+        // Normal pagination
+        const response = await axios.get(`${API_BASE}?page=${page}&size=10`);
         const payload = Array.isArray(response.data)
           ? response.data
           : Array.isArray(response.data?.content)
@@ -39,23 +110,31 @@ export default function Products() {
           ? response.data.products
           : [];
         setProducts(payload);
-      } catch (error) {
-        console.error("Error fetching products:", error);
-        setError("Không thể tải danh sách sản phẩm.");
-      } finally {
-        setLoading(false);
+        setTotalPages(
+          response.data?.totalPages || response.data?.total_pages || 1
+        );
+        setTotalElements(
+          response.data?.totalElements ||
+            response.data?.total_elements ||
+            payload.length
+        );
+        setCurrentPage(page);
       }
-    };
-
-    fetchProducts();
-  }, []);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      setError("Không thể tải danh sách sản phẩm.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAdd = () => {
     setEditingId(null);
     setFormData({
-      sku: "",
+      sku: generateSku(),
       name: "",
       categoryId: "",
+      categoryName: "",
       price: "",
       unit: "hộp",
       stockQuantity: "",
@@ -73,6 +152,11 @@ export default function Products() {
       name: product.name || "",
       categoryId:
         product.categoryId || product.category_id || product.category?.id || "",
+      categoryName:
+        product.categoryName ||
+        product.category?.name ||
+        product.category_name ||
+        "",
       price: product.price ?? "",
       unit: product.unit || "hộp",
       stockQuantity: product.stockQuantity ?? "",
@@ -83,6 +167,12 @@ export default function Products() {
     setShowForm(true);
   };
 
+  const handlePageChange = (page) => {
+    if (page >= 0 && page < totalPages) {
+      fetchProducts(page);
+    }
+  };
+
   const handleSave = async () => {
     if (
       !formData.sku ||
@@ -91,7 +181,7 @@ export default function Products() {
       !formData.stockQuantity ||
       !formData.categoryId
     ) {
-      setSaveError("Vui lòng nhập đầy đủ SKU, tên, danh mục, giá và tồn kho.");
+      setSaveError("Vui lòng nhập đầy đủ tên, danh mục, giá và tồn kho.");
       return;
     }
 
@@ -103,11 +193,12 @@ export default function Products() {
       name: formData.name,
       price: Number(formData.price),
       unit: formData.unit,
-      stock_quantity: Number(formData.stockQuantity),
-      image_url: formData.imageUrl || null,
+      stockQuantity: Number(formData.stockQuantity),
+      imageUrl: formData.imageUrl || null,
       description: formData.description,
       status: 1,
-      category_id: Number(formData.categoryId),
+      categoryId: Number(formData.categoryId),
+      categoryName: formData.categoryName || undefined,
     };
 
     try {
@@ -119,10 +210,24 @@ export default function Products() {
             product.id === editingId ? updatedProduct : product
           )
         );
+        if (isSearching) {
+          setAllProducts((prevProducts) =>
+            prevProducts.map((product) =>
+              product.id === editingId ? updatedProduct : product
+            )
+          );
+        }
       } else {
         const response = await axios.post(API_BASE, payload);
         const newProduct = response.data;
         setProducts((prevProducts) => [...prevProducts, newProduct]);
+        if (isSearching) {
+          setAllProducts((prevProducts) => [...prevProducts, newProduct]);
+        }
+        setTotalElements((prev) => prev + 1);
+        // Recalculate total pages if needed
+        const newTotalPages = Math.ceil((totalElements + 1) / 10);
+        setTotalPages(newTotalPages);
       }
       setShowForm(false);
       setEditingId(null);
@@ -144,32 +249,47 @@ export default function Products() {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Bạn chắc chắn muốn xóa sản phẩm này?")) return;
+  const handleStatusUpdate = async (id, newStatus) => {
+    const action = newStatus === 1 ? "kích hoạt" : "vô hiệu hóa";
+    if (!window.confirm(`Bạn chắc chắn muốn ${action} sản phẩm này?`)) return;
 
     try {
-      await axios.delete(`${API_BASE}/${id}`);
-      setProducts((prevProducts) =>
-        prevProducts.filter((product) => product.id !== id)
-      );
+      const payload = { status: newStatus };
+      await axios.put(`${API_BASE}/${id}`, payload);
+
+      // Update local state
+      if (isSearching) {
+        setAllProducts((prevProducts) =>
+          prevProducts.map((product) =>
+            product.id === id ? { ...product, status: newStatus } : product
+          )
+        );
+      } else {
+        setProducts((prevProducts) =>
+          prevProducts.map((product) =>
+            product.id === id ? { ...product, status: newStatus } : product
+          )
+        );
+      }
     } catch (error) {
-      console.error("Error deleting sản phẩm:", error);
-      alert("Không thể xóa sản phẩm. Vui lòng thử lại.");
+      console.error("Error updating product status:", error);
+      alert("Không thể cập nhật trạng thái sản phẩm. Vui lòng thử lại.");
     }
   };
 
-  const filteredProducts = products.filter((product) => {
-    const term = searchTerm.trim().toLowerCase();
-    if (!term) return true;
+  const filteredProducts =
+    isSearching && searchTerm.trim()
+      ? allProducts.filter((product) => {
+          const term = searchTerm.trim().toLowerCase();
+          return (
+            product.name?.toLowerCase().includes(term) ||
+            product.sku?.toLowerCase().includes(term) ||
+            product.categoryName?.toLowerCase().includes(term)
+          );
+        })
+      : products;
 
-    return (
-      product.name?.toLowerCase().includes(term) ||
-      product.sku?.toLowerCase().includes(term) ||
-      product.categoryName?.toLowerCase().includes(term)
-    );
-  });
-
-  const currentProducts = filteredProducts;
+  const currentProducts = isSearching ? filteredProducts : products;
 
   return (
     <div className="space-y-6">
@@ -225,7 +345,11 @@ export default function Products() {
               />
             </div>
             <div className="text-xs sm:text-sm text-gray-600">
-              {filteredProducts.length} sản phẩm tìm thấy
+              {isSearching
+                ? `${filteredProducts.length} sản phẩm tìm thấy / Tổng số: ${allProducts.length} sản phẩm`
+                : `${currentProducts.length} sản phẩm (Trang ${
+                    currentPage + 1
+                  } / ${totalPages}) / Tổng số: ${totalElements} sản phẩm`}
             </div>
           </div>
 
@@ -248,6 +372,9 @@ export default function Products() {
                   <th className="px-3 sm:px-6 py-3 text-center font-semibold text-gray-700 hidden md:table-cell">
                     Tồn kho
                   </th>
+                  <th className="px-3 sm:px-6 py-3 text-center font-semibold text-gray-700 hidden lg:table-cell">
+                    Trạng thái
+                  </th>
                   <th className="px-3 sm:px-6 py-3 text-center font-semibold text-gray-700">
                     Hành động
                   </th>
@@ -257,7 +384,7 @@ export default function Products() {
                 {currentProducts.length === 0 ? (
                   <tr>
                     <td
-                      colSpan="6"
+                      colSpan="7"
                       className="px-3 sm:px-6 py-8 text-center text-gray-500 text-xs sm:text-sm"
                     >
                       Không tìm thấy sản phẩm phù hợp.
@@ -301,6 +428,17 @@ export default function Products() {
                       <td className="px-3 sm:px-6 py-4 text-center text-gray-700 hidden md:table-cell text-xs sm:text-sm">
                         {product.stockQuantity}
                       </td>
+                      <td className="px-3 sm:px-6 py-4 text-center hidden lg:table-cell">
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                            product.status === 1
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {product.status === 1 ? "Hoạt động" : "Vô hiệu"}
+                        </span>
+                      </td>
                       <td className="px-3 sm:px-6 py-4">
                         <div className="flex gap-1 sm:gap-2 justify-center flex-wrap">
                           <button
@@ -310,10 +448,19 @@ export default function Products() {
                             Sửa
                           </button>
                           <button
-                            onClick={() => handleDelete(product.id)}
-                            className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-2 sm:py-2 sm:px-3 rounded text-xs sm:text-sm transition"
+                            onClick={() =>
+                              handleStatusUpdate(
+                                product.id,
+                                product.status === 1 ? 0 : 1
+                              )
+                            }
+                            className={`font-bold py-1 px-2 sm:py-2 sm:px-3 rounded text-xs sm:text-sm transition ${
+                              product.status === 1
+                                ? "bg-red-500 hover:bg-red-600 text-white"
+                                : "bg-green-500 hover:bg-green-600 text-white"
+                            }`}
                           >
-                            Xóa
+                            {product.status === 1 ? "Vô hiệu" : "Kích hoạt"}
                           </button>
                         </div>
                       </td>
@@ -326,8 +473,58 @@ export default function Products() {
 
           <div className="flex flex-col gap-3 border-t border-gray-100 px-3 sm:px-6 py-4">
             <div className="text-xs sm:text-sm text-gray-600">
-              Hiển thị {currentProducts.length} sản phẩm
+              {isSearching
+                ? `Hiển thị ${currentProducts.length} sản phẩm tìm thấy`
+                : `Hiển thị ${currentProducts.length} sản phẩm (Trang ${
+                    currentPage + 1
+                  } / ${totalPages})`}
             </div>
+            {!isSearching && totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 0}
+                  className="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed rounded"
+                >
+                  ‹ Trước
+                </button>
+
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i;
+                  } else if (currentPage < 3) {
+                    pageNum = i;
+                  } else if (currentPage > totalPages - 3) {
+                    pageNum = totalPages - 5 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      className={`px-3 py-1 text-sm rounded ${
+                        currentPage === pageNum
+                          ? "bg-orange-600 text-white"
+                          : "bg-gray-200 hover:bg-gray-300"
+                      }`}
+                    >
+                      {pageNum + 1}
+                    </button>
+                  );
+                })}
+
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages - 1}
+                  className="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed rounded"
+                >
+                  Sau ›
+                </button>
+              </div>
+            )}
           </div>
         </>
       )}

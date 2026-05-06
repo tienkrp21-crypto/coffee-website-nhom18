@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import LoadingPage from '../components/LoadingPage';
 
 // 1. Link máy chủ Backend để lấy dữ liệu đơn hàng
-const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
+//const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
+const BASE_URL = 'http://localhost:8080';
 
 const OrderHistory = () => {
   const [orders, setOrders] = useState([]); // Hố chứa danh sách đơn hàng

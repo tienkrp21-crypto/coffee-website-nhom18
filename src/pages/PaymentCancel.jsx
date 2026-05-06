@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { XCircle, ShoppingBag, Loader2 } from 'lucide-react'; 
 
-const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
+//const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
+const BASE_URL = 'http://localhost:8080';
 
 const PaymentCancel = () => {
   const location = useLocation();

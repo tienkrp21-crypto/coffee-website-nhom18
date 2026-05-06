@@ -4,6 +4,26 @@ import axios from "axios";
 const API_BASE =
   "https://coffee-website-nhom18-admin.onrender.com/api/admin/orders";
 
+// 🟢 THÊM: API USER
+const USER_API =
+  "https://coffee-website-nhom18-admin.onrender.com/users";
+
+// 🟢 THÊM: map status backend -> UI
+const mapStatus = (status) => {
+  switch (status) {
+    case "PENDING":
+      return "Chờ xử lý";
+    case "CANCELLED":
+      return "Đã hủy";
+    case "DELIVERED":
+      return "Đã giao";
+    case "SHIPPING":
+      return "Đang giao";
+    default:
+      return status;
+  }
+};
+
 const getStatusColor = (status) => {
   switch (status) {
     case "Đã giao":
@@ -17,6 +37,7 @@ const getStatusColor = (status) => {
       return "bg-orange-100 text-orange-700";
     case "Hủy":
     case "cancelled":
+    case "Đã hủy":
       return "bg-red-100 text-red-700";
     default:
       return "bg-gray-100 text-gray-700";
@@ -24,26 +45,41 @@ const getStatusColor = (status) => {
 };
 
 const normalizeOrder = (order) => ({
-  id: order.id || order._id || order.orderId || "-",
+  id: order.id?.toString() || "-",
   customer:
     order.customerName || order.customer?.name || order.user?.name || "-",
-  email: order.email || order.customer?.email || order.user?.email || "-",
-  phone: order.phone || order.customer?.phone || order.user?.phone || "-",
+
+  // 🟢 email sẽ load sau
+  email: "-",
+
+  phone: order.receiverPhone || order.customer?.phone || "-",
+
   date: order.createdAt
     ? new Date(order.createdAt).toLocaleDateString("vi-VN")
-    : order.orderDate || order.date || "-",
-  amount: order.totalAmount ?? order.amount ?? order.price ?? 0,
+    : "-",
+
+  amount: Number(order.totalAmount ?? order.amount ?? 0),
+
   items:
-    Array.isArray(order.items) && order.items.length > 0
-      ? order.items.length
-      : order.quantity ?? order.itemCount ?? 0,
-  status: order.status || order.orderStatus || "Chờ xử lý",
-  paymentMethod: order.paymentMethod || order.method || "-",
+    Array.isArray(order.orderDetails)
+      ? order.orderDetails.length
+      : order.quantity ?? 0,
+
+  // 🟢 map status
+  status: mapStatus(order.orderStatus || order.status),
+
+  paymentMethod: order.paymentMethod || "-",
   address:
-    order.address || order.shippingAddress || order.deliveryAddress || "-",
-  itemsDetail: Array.isArray(order.items)
-    ? order.items
-    : order.orderItems || [],
+    order.shippingAddress || order.deliveryAddress || order.address || "-",
+
+  // 🟢 QUAN TRỌNG
+  itemsDetail: Array.isArray(order.orderDetails)
+    ? order.orderDetails
+    : [],
+
+  // 🟢 thêm userId
+  userId: order.userId,
+
   raw: order,
 });
 
@@ -69,6 +105,7 @@ export default function Orders() {
           : Array.isArray(response.data?.content)
           ? response.data.content
           : [];
+
         setOrders(payload.map(normalizeOrder));
       } catch (fetchError) {
         console.error("Error fetching orders:", fetchError);
@@ -81,14 +118,25 @@ export default function Orders() {
     fetchOrders();
   }, []);
 
-  const fetchOrderDetail = async (orderId) => {
+  // 🔥 SỬA: fetch detail + user
+  const fetchOrderDetail = async (orderId, userId) => {
     setSelectedOrder(null);
     setDetailError(null);
     setDetailLoading(true);
     try {
-      const response = await axios.get(`${API_BASE}/${orderId}`);
-      const payload = response.data;
-      setSelectedOrder(normalizeOrder(payload));
+      const [orderRes, userRes] = await Promise.all([
+        axios.get(`${API_BASE}/${orderId}`),
+        axios.get(`${USER_API}/${userId}`),
+      ]);
+
+      const orderData = normalizeOrder(orderRes.data);
+      const userData = userRes.data;
+
+      setSelectedOrder({
+        ...orderData,
+        email: userData.email || "-",
+        phone: userData.phone || orderData.phone,
+      });
     } catch (fetchError) {
       console.error("Error fetching order detail:", fetchError);
       setDetailError("Không thể tải chi tiết đơn hàng.");
@@ -97,14 +145,16 @@ export default function Orders() {
     }
   };
 
+  const safe = (val) => (val || "").toString().toLowerCase();
+
   const filteredOrders = orders.filter((order) => {
     const term = searchTerm.trim().toLowerCase();
     if (!term) return true;
     return (
-      order.id.toLowerCase().includes(term) ||
-      order.customer.toLowerCase().includes(term) ||
-      order.email.toLowerCase().includes(term) ||
-      order.status.toLowerCase().includes(term)
+      safe(order.id).includes(term) ||
+      safe(order.customer).includes(term) ||
+      safe(order.email).includes(term) ||
+      safe(order.status).includes(term)
     );
   });
 
@@ -115,9 +165,6 @@ export default function Orders() {
           <h1 className="text-3xl font-bold text-gray-800">
             🧾 Quản lý Đơn hàng
           </h1>
-          {/* <p className="mt-2 text-sm text-gray-500">
-            Kết nối API đơn hàng admin và tải dữ liệu thực tế từ hệ thống.
-          </p> */}
         </div>
         <div className="w-full md:w-96">
           <input
@@ -185,7 +232,11 @@ export default function Orders() {
                     filteredOrders.map((order) => (
                       <tr
                         key={order.id}
-                        className="border-t border-gray-100 hover:bg-gray-50"
+                        className={`border-t border-gray-100 hover:bg-gray-50 ${
+                          selectedOrder?.id === order.id
+                            ? "bg-orange-50"
+                            : ""
+                        }`}
                       >
                         <td className="px-6 py-4 font-semibold text-orange-600">
                           {order.id}
@@ -213,7 +264,10 @@ export default function Orders() {
                         </td>
                         <td className="px-6 py-4 text-center">
                           <button
-                            onClick={() => fetchOrderDetail(order.id)}
+                            disabled={detailLoading}
+                            onClick={() =>
+                              fetchOrderDetail(order.id, order.userId)
+                            }
                             className="rounded-full bg-orange-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-700"
                           >
                             Xem
@@ -290,6 +344,8 @@ export default function Orders() {
                   {selectedOrder.status}
                 </p>
               </div>
+
+              {/* 🔥 HIỂN THỊ CHI TIẾT SẢN PHẨM */}
               <div>
                 <p className="text-sm text-gray-500">Sản phẩm</p>
                 {selectedOrder.itemsDetail.length > 0 ? (
@@ -297,17 +353,15 @@ export default function Orders() {
                     {selectedOrder.itemsDetail.map((item, index) => (
                       <li
                         key={index}
-                        className="flex justify-between gap-3 text-sm text-gray-700"
+                        className="grid grid-cols-3 text-sm text-gray-700"
                       >
-                        <span>
-                          {item.name ||
-                            item.productName ||
-                            `Sản phẩm ${index + 1}`}
+                        <span>{item.productName}</span>
+                        <span className="text-center">
+                          {item.quantity} x{" "}
+                          {item.priceAtPurchase.toLocaleString()}đ
                         </span>
-                        <span>
-                          {item.quantity ?? item.qty ?? 1} x{" "}
-                          {(item.price ?? item.unitPrice ?? 0).toLocaleString()}
-                          đ
+                        <span className="text-right font-semibold">
+                          {item.subTotal.toLocaleString()}đ
                         </span>
                       </li>
                     ))}

@@ -3,7 +3,8 @@ import { useCart } from '../context/CartContext';
 import { Trash2, ChevronLeft, ShoppingBag } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
+//const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
+const BASE_URL = 'http://localhost:8080';
 
 const Cart = () => {
   // Lấy dữ liệu và hàm xử lý từ CartContext 

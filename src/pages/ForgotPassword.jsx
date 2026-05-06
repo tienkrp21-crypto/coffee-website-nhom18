@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 
-const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
+//const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
+const BASE_URL = 'http://localhost:8080';
 
 const ForgotPassword = () => {
   const navigate = useNavigate();

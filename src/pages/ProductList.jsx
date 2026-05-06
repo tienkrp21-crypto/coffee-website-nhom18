@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { Search } from "lucide-react";
 
-const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
+//const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
+const BASE_URL = 'http://localhost:8080';
 
 const ProductList = () => {
   // 1. KẾT NỐI GIỎ HÀNG: Lấy hàm addToCart từ Context để dùng cho nút "Thêm vào giỏ"

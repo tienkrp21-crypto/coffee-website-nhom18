@@ -5,7 +5,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { CheckCircle, Wallet, Banknote } from 'lucide-react';
 import LoadingPage from '../components/LoadingPage';
 
-const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
+//const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
+const BASE_URL = 'http://localhost:8080';
 
 const Checkout = () => {
   const { cartItems, clearCart } = useCart(); 

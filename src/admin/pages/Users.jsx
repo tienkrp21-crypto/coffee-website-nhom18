@@ -21,6 +21,43 @@ const normalizeUser = (user) => ({
 });
 
 export default function Users() {
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+
+  const toggleUserStatus = async (userId) => {
+    const user = users.find((u) => u.id === userId);
+    if (!user) return;
+
+    const newStatus = user.status === "active" ? "inactive" : "active";
+    const actionText = newStatus === "active" ? "kích hoạt" : "khóa";
+
+    if (!window.confirm(`Bạn chắc chắn muốn ${actionText} người dùng này?`))
+      return;
+
+    setUpdatingStatus(true);
+    try {
+      await axios.put(`${API_BASE}/${userId}`, {
+        status: newStatus === "active" ? 1 : 0,
+      });
+
+      // Update the user in the list
+      setUsers(
+        users.map((u) => (u.id === userId ? { ...u, status: newStatus } : u))
+      );
+
+      // Update selected user if it's the current one
+      if (selectedUser && selectedUser.id === userId) {
+        setSelectedUser({ ...selectedUser, status: newStatus });
+      }
+
+      alert(`Người dùng đã được ${actionText} thành công!`);
+    } catch (error) {
+      console.error("Error updating user status:", error);
+      alert("Không thể cập nhật trạng thái người dùng. Vui lòng thử lại.");
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -262,15 +299,32 @@ export default function Users() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Trạng thái</p>
-                  <p
-                    className={`mt-1 inline-flex rounded-full px-3 py-1 text-sm font-semibold ${
-                      selectedUser.status === "active"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
-                    }`}
-                  >
-                    {selectedUser.status === "active" ? "Hoạt động" : "Khóa"}
-                  </p>
+                  <div className="mt-1 flex items-center gap-2">
+                    <p
+                      className={`inline-flex rounded-full px-3 py-1 text-sm font-semibold ${
+                        selectedUser.status === "active"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
+                    >
+                      {selectedUser.status === "active" ? "Hoạt động" : "Khóa"}
+                    </p>
+                    <button
+                      onClick={() => toggleUserStatus(selectedUser.id)}
+                      disabled={updatingStatus}
+                      className={`px-3 py-1 text-sm rounded transition-all hover:scale-105 shadow-md ${
+                        selectedUser.status === "active"
+                          ? "bg-red-500 hover:bg-red-600 text-white"
+                          : "bg-green-500 hover:bg-green-600 text-white"
+                      } disabled:opacity-50`}
+                    >
+                      {updatingStatus
+                        ? "Đang cập nhật..."
+                        : selectedUser.status === "active"
+                        ? "Khóa tài khoản"
+                        : "Kích hoạt"}
+                    </button>
+                  </div>
                 </div>
               </div>
             ) : (
