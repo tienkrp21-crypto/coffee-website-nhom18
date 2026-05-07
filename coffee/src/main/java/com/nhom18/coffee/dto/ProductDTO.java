@@ -4,10 +4,6 @@ import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-
 @JsonPropertyOrder({ "id", "sku", "name", "price", "unit", "stockQuantity", "imageUrl", "description", "status", "categoryId", "categoryName", "createdAt", "updatedAt" })
 public class ProductDTO {
 
@@ -15,19 +11,12 @@ public class ProductDTO {
     
     // SKU Backend sẽ tự sinh, không bắt buộc FE gửi
     private String sku;
-
-    @NotBlank(message = "Tên sản phẩm không được để trống")
     private String name;
 
-    @NotNull(message = "Giá sản phẩm không được để trống")
-    @Min(value = 0, message = "Giá sản phẩm không được âm")
     private Integer price;
 
-    @NotBlank(message = "Đơn vị tính không được để trống (vd: 250g, 1kg)")
     private String unit;
 
-    @NotNull(message = "Số lượng tồn kho không được để trống")
-    @Min(value = 0, message = "Số lượng tồn kho không được âm")
     private Integer stockQuantity;
 
     // FE gửi chuỗi string (link ảnh) vì ta đã chốt Cách A
@@ -37,7 +26,7 @@ public class ProductDTO {
     
     private Integer status;
 
-    @NotNull(message = "ID Danh mục không được để trống")
+    
     private Integer categoryId;
 
     // Trả về tên danh mục để FE tiện hiển thị

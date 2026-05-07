@@ -1,18 +1,11 @@
 package com.nhom18.coffee.dto;
 
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-
 public class ShippingFeeDTO {
 
     private Integer id;
 
-    @NotBlank(message = "Tên khu vực không được để trống")
     private String regionName;
 
-    @NotNull(message = "Phí vận chuyển không được để trống")
-    @Min(value = 0, message = "Phí vận chuyển không được âm")
     private Integer fee;
 
     // Getters and Setters

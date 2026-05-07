@@ -2,27 +2,16 @@ package com.nhom18.coffee.dto;
 
 import java.time.LocalDateTime;
 
-import jakarta.validation.constraints.Future;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-
 public class VoucherDTO {
 
     private Integer id;
 
-    @NotBlank(message = "Mã voucher không được để trống")
     private String code;
 
-    @NotNull(message = "Số tiền giảm giá không được để trống")
-    @Min(value = 1000, message = "Số tiền giảm giá phải lớn hơn hoặc bằng 1,000 VND")
     private Integer discountAmount;
 
-    @NotNull(message = "Giá trị đơn hàng tối thiểu không được để trống")
-    @Min(value = 0, message = "Giá trị đơn hàng tối thiểu không được âm")
     private Integer minOrderValue;
 
-    @Future(message = "Ngày hết hạn phải nằm trong tương lai")
     private LocalDateTime expirationDate;
 
     private Integer status; // Sẽ được hệ thống tự set (thường mặc định là 1 khi tạo)
