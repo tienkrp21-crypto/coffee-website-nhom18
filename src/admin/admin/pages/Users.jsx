@@ -1,11 +1,26 @@
+/**
+ * ========================================
+ * TRANG QUẢN LÝ NGƯỜI DÙNG (Users.jsx)
+ * ========================================
+ *
+ * Chức năng: Quản lý tài khoản người dùng
+ * - Hiển thị danh sách người dùng
+ * - Xem chi tiết thông tin người dùng
+ * - Bật/tắt tài khoản người dùng
+ * - Thống kê người dùng hoạt động và khóa
+ */
+
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
+// 🔗 API endpoint cho người dùng
 const API_BASE = "https://coffee-website-nhom18-admin.onrender.com/users";
 
+// ✅ Hàm kiểm tra người dùng có hoạt động hay không
 const isActiveUser = (status) =>
   status === "active" || status === 1 || status === true;
 
+// 🔄 Hàm chuẩn hóa dữ liệu người dùng từ API
 const normalizeUser = (user) => ({
   id: user.id,
   name: user.name || user.fullName || user.username || "-",
@@ -21,8 +36,10 @@ const normalizeUser = (user) => ({
 });
 
 export default function Users() {
+  // ⚙️ State kiểm soát cập nhật trạng thái
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
+  // 🔀 Hàm bật/tắt trạng thái tài khoản người dùng
   const toggleUserStatus = async (userId) => {
     const user = users.find((u) => u.id === userId);
     if (!user) return;
@@ -35,16 +52,15 @@ export default function Users() {
 
     setUpdatingStatus(true);
     try {
-      await axios.put(`${API_BASE}/${userId}`, {
-        status: newStatus === "active" ? 1 : 0,
-      });
+      // Gọi API bật/tắt
+      await axios.patch(`${API_BASE}/${userId}/toggle`);
 
-      // Update the user in the list
+      // Cập nhật state danh sách
       setUsers(
         users.map((u) => (u.id === userId ? { ...u, status: newStatus } : u))
       );
 
-      // Update selected user if it's the current one
+      // Cập nhật người dùng được chọn nếu là người dùng hiện tại
       if (selectedUser && selectedUser.id === userId) {
         setSelectedUser({ ...selectedUser, status: newStatus });
       }
@@ -58,14 +74,20 @@ export default function Users() {
     }
   };
 
+  // 📊 State quản lý danh sách người dùng
   const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [detailError, setDetailError] = useState(null);
+  const [loading, setLoading] = useState(true); // Đang tải hay không
+  const [error, setError] = useState(null); // Thông báo lỗi
 
+  // 🔍 State quản lý tìm kiếm
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // 🔎 State quản lý chi tiết người dùng
+  const [selectedUser, setSelectedUser] = useState(null); // Người dùng được chọn
+  const [detailLoading, setDetailLoading] = useState(false); // Đang tải chi tiết
+  const [detailError, setDetailError] = useState(null); // Lỗi tải chi tiết
+
+  // 📥 Tải danh sách người dùng khi component render
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -90,6 +112,7 @@ export default function Users() {
     fetchUsers();
   }, []);
 
+  // 📋 Hàm tải chi tiết thông tin người dùng
   const fetchUserDetail = async (id) => {
     setDetailError(null);
     setDetailLoading(true);
@@ -104,6 +127,7 @@ export default function Users() {
     }
   };
 
+  // 🔎 Hàm lọc người dùng theo từ khóa tìm kiếm
   const filteredUsers = users.filter((user) => {
     const term = searchTerm.trim().toLowerCase();
     if (!term) return true;
@@ -115,6 +139,7 @@ export default function Users() {
     );
   });
 
+  // 📊 Đếm số người dùng hoạt động và khóa
   const activeCount = users.filter((user) => user.status === "active").length;
   const inactiveCount = users.length - activeCount;
 

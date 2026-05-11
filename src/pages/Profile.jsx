@@ -4,61 +4,87 @@ import { User, Mail, Phone, Edit2, Save, LogOut, ArrowLeft, Package } from 'luci
 import LoadingPage from '../components/LoadingPage'; 
 import { useCart } from '../context/CartContext';
 
-// Địa chỉ máy chủ để gọi API (nếu cần cập nhật thông tin)
-const BASE_URL = 'https://coffee-website-nhom18-1.onrender.com';
+// Địa chỉ máy chủ
+const BASE_URL = 'http://localhost:8080';
 
 const Profile = () => {
-  const navigate = useNavigate(); // Công cụ để điều hướng trang
-  const { clearCart } = useCart(); // Lấy hàm xóa giỏ hàng từ "bộ não" Context
+  const navigate = useNavigate(); 
+  const { clearCart } = useCart(); 
   
-  // 1. CÁC TRẠNG THÁI (STATE) QUẢN LÝ GIAO DIỆN
-  const [isEditing, setIsEditing] = useState(false); // Đang xem hay đang sửa thông tin?
-  const [userData, setUserData] = useState(null);    // Dữ liệu người dùng lấy từ bộ nhớ
-  const [loading, setLoading] = useState(true);      // Trạng thái chờ khi đang tải dữ liệu
+  const [isEditing, setIsEditing] = useState(false); 
+  const [userData, setUserData] = useState(null);    
+  const [loading, setLoading] = useState(true);      
+  const [editForm, setEditForm] = useState({ fullName: '', phone: '' });
 
-  // 2. KIỂM TRA ĐĂNG NHẬP (Chạy ngay khi vừa mở trang)
   useEffect(() => {
-    // Tìm xem trong "ngăn kéo" trình duyệt có thông tin user không
     const savedUser = localStorage.getItem('user');
-    
     if (!savedUser) {
-      // Nếu rỗng -> Chưa đăng nhập -> Đuổi về trang Login ngay lập tức
       navigate('/login');
       return;
     }
-
     try {
-      // Nếu có -> Chuyển chuỗi chữ thành Object để React đọc được và hiện lên màn hình
       const user = JSON.parse(savedUser);
       setUserData(user);
+      // Đổ dữ liệu hiện tại vào form edit
+      setEditForm({ fullName: user.fullName || '', phone: user.phone || '' });
     } catch (error) {
       console.error("Lỗi đọc dữ liệu user:", error);
       navigate('/login');
     } finally {
-      // Đợi 0.8 giây cho mượt rồi mới tắt màn hình Loading
       setTimeout(() => setLoading(false), 800);
     }
   }, [navigate]);
 
-  // 3. HÀM XỬ LÝ ĐĂNG XUẤT (LOGOUT)
   const handleLogout = () => {
-    // Xóa sạch thông tin đăng nhập trong máy
     localStorage.removeItem('user');
-    
-    // QUAN TRỌNG: Xóa sạch giỏ hàng hiện tại để người dùng sau không thấy món của sếp
     clearCart(); 
-    
-    alert('Đăng xuất thành công! Hẹn gặp lại bạn tại CafeMaterial.');
-    navigate('/'); // Quay về trang chủ sạch sẽ
+    alert('Đăng xuất thành công!');
+    navigate('/'); 
   };
 
-  // Nếu đang tải, hiện trang Loading lung linh đã chuẩn bị sẵn
+  // HÀM MỚI: Gửi dữ liệu xuống Backend khi bấm Lưu
+  const handleSave = async () => {
+    try {
+      // Gọi API PUT xuống Backend của sếp
+      const response = await fetch(`${BASE_URL}/users/${userData.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // Gửi họ tên và số điện thoại mới, giữ nguyên các trường khác
+        body: JSON.stringify({
+          ...userData,
+          fullName: editForm.fullName,
+          phone: editForm.phone
+        })
+      });
+
+      if (response.ok) {
+        const updatedUser = await response.json();
+        
+        // Cập nhật lại giao diện
+        setUserData(updatedUser);
+        
+        // Cập nhật lại LocalStorage để f5 không bị mất
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        
+        // Tắt chế độ sửa
+        setIsEditing(false);
+        alert('Cập nhật thông tin thành công!');
+      } else {
+        alert('Cập nhật thất bại, vui lòng thử lại!');
+      }
+    } catch (error) {
+      console.error("Lỗi khi lưu:", error);
+      alert('Lỗi kết nối đến máy chủ!');
+    }
+  };
+
   if (loading) return <LoadingPage />;
 
   return (
     <div className="font-sans text-gray-600 bg-[#FAF3EB] min-h-screen py-20">
       <div className="container mx-auto px-4 max-w-4xl">
-        {/* Nút quay lại trang chủ */}
         <button onClick={() => navigate('/')} className="flex items-center gap-2 text-[#2B2825] font-bold uppercase text-[10px] tracking-widest mb-8 hover:text-[#E88F2A] transition">
           <ArrowLeft size={16} /> Quay về trang chủ
         </button>
@@ -66,7 +92,6 @@ const Profile = () => {
         <div className="bg-white border-2 border-[#2B2825]/10 shadow-2xl overflow-hidden">
           <div className="flex flex-col md:flex-row">
             
-            {/* Cột bên trái: Avatar & Điều hướng */}
             <div className="md:w-1/3 bg-[#2B2825] p-12 text-center text-white flex flex-col justify-between">
               <div>
                 <div className="w-32 h-32 bg-[#E88F2A] rounded-full mx-auto mb-6 flex items-center justify-center border-4 border-white/20">
@@ -75,7 +100,6 @@ const Profile = () => {
                 <h2 className="font-serif text-2xl uppercase tracking-wider mb-2">{userData?.fullName || 'Khách hàng'}</h2>
                 <p className="text-[#E88F2A] text-[10px] font-black uppercase tracking-[0.2em] mb-8">Thành viên CoffeeMaterial</p>
                 
-                {/* NÚT XEM LỊCH SỬ ĐƠN HÀNG - MỚI THÊM */}
                 <button 
                   onClick={() => navigate('/order-history')}
                   className="w-full mb-4 flex items-center justify-center gap-2 bg-[#E88F2A] text-white py-3 px-6 hover:bg-white hover:text-[#E88F2A] transition-all text-[10px] font-bold uppercase tracking-widest border border-[#E88F2A]"
@@ -92,12 +116,13 @@ const Profile = () => {
               </button>
             </div>
 
-            {/* Cột bên phải: Thông tin chi tiết */}
             <div className="md:w-2/3 p-12">
               <div className="flex justify-between items-center mb-12">
                 <h3 className="font-serif text-3xl text-[#2B2825] uppercase">Hồ sơ cá nhân</h3>
+                
+                {/* Đã sửa logic nút bấm: Nếu đang sửa thì gọi handleSave, ngược lại thì mở form */}
                 <button 
-                  onClick={() => setIsEditing(!isEditing)} 
+                  onClick={() => isEditing ? handleSave() : setIsEditing(true)} 
                   className="flex items-center gap-2 bg-[#2B2825] text-white px-6 py-2 hover:bg-[#E88F2A] transition text-[10px] font-bold uppercase tracking-widest"
                 >
                   {isEditing ? <><Save size={16} /> Lưu thay đổi</> : <><Edit2 size={16} /> Chỉnh sửa</>}
@@ -105,9 +130,29 @@ const Profile = () => {
               </div>
 
               <div className="space-y-8">
-                <ProfileItem icon={<User size={18}/>} label="Họ và tên" value={userData?.fullName} isEditing={isEditing} />
-                <ProfileItem icon={<Mail size={18}/>} label="Địa chỉ Email" value={userData?.email} isEditing={false} />
-                <ProfileItem icon={<Phone size={18}/>} label="Số điện thoại" value={userData?.phone || "Chưa cập nhật"} isEditing={isEditing} />
+                {/* Đã truyền thêm value, editValue và onChange để bắt dữ liệu */}
+                <ProfileItem 
+                  icon={<User size={18}/>} label="Họ và tên" 
+                  value={userData?.fullName} 
+                  editValue={editForm.fullName}
+                  isEditing={isEditing} 
+                  onChange={(e) => setEditForm({...editForm, fullName: e.target.value})}
+                />
+                
+                {/* Email thường không cho sửa dễ dàng nên giữ nguyên isEditing={false} */}
+                <ProfileItem 
+                  icon={<Mail size={18}/>} label="Địa chỉ Email" 
+                  value={userData?.email} 
+                  isEditing={false} 
+                />
+                
+                <ProfileItem 
+                  icon={<Phone size={18}/>} label="Số điện thoại" 
+                  value={userData?.phone || "Chưa cập nhật"} 
+                  editValue={editForm.phone}
+                  isEditing={isEditing} 
+                  onChange={(e) => setEditForm({...editForm, phone: e.target.value})}
+                />
                 
                 <div className="pt-4 border-t border-gray-100">
                   <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">
@@ -124,14 +169,16 @@ const Profile = () => {
   );
 };
 
-const ProfileItem = ({ icon, label, value, isEditing }) => (
+// Cập nhật lại Component ProfileItem để bắt được sự kiện gõ phím
+const ProfileItem = ({ icon, label, value, editValue, isEditing, onChange }) => (
   <div className="border-b border-gray-100 pb-4">
     <label className="flex items-center gap-2 text-[10px] font-black text-[#E88F2A] mb-2 uppercase tracking-widest">
       {icon} {label}
     </label>
-    {isEditing ? (
+    {isEditing && onChange ? (
       <input 
-        defaultValue={value} 
+        value={editValue} 
+        onChange={onChange}
         className="w-full bg-[#FAF3EB] border-none px-4 py-2 text-lg text-[#2B2825] focus:ring-1 focus:ring-[#E88F2A] outline-none"
       />
     ) : (

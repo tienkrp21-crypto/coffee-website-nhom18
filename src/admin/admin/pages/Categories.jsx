@@ -2,18 +2,23 @@
 import axios from "axios";
 
 export default function Categories() {
+  // 📋 State lưu danh sách danh mục
   const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true); // Đang tải hay không
+  const [error, setError] = useState(null); // Thông báo lỗi
+  const [searchTerm, setSearchTerm] = useState(""); // 🔍 Tìm kiếm danh mục theo tên
 
+  // 🔄 Hàm tải danh sách danh mục từ API
   const fetchCategories = async () => {
     try {
       setLoading(true);
 
+      // 📥 Lấy danh sách danh mục
       const categoriesResponse = await axios.get(
         "https://coffee-website-nhom18-admin.onrender.com/api/categories"
       );
 
+      // 📥 Lấy danh sách sản phẩm để đếm số lượng per danh mục
       const productsResponse = await axios.get(
         "https://coffee-website-nhom18-admin.onrender.com/api/products?page=0&size=1000"
       );
@@ -23,6 +28,7 @@ export default function Categories() {
         ? productsData
         : productsData?.content || productsData?.data || [];
 
+      // 🔢 Đếm số sản phẩm theo danh mục
       const productCountByCategory = {};
       products.forEach((product) => {
         const categoryId = product.categoryId || product.category_id;
@@ -40,6 +46,7 @@ export default function Categories() {
         return;
       }
 
+      // 📊 Gộp thông tin danh mục với số lượng sản phẩm
       const allCategories = categoriesData.map((category) => ({
         ...category,
         productsCount: productCountByCategory[category.id] || 0,
@@ -54,30 +61,36 @@ export default function Categories() {
     }
   };
 
+  // 🚀 Tải danh sách danh mục khi component render
   useEffect(() => {
     fetchCategories();
   }, []);
 
-  const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState(null);
-  const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-  const [formData, setFormData] = useState({ name: "", description: "" });
+  // 📝 State quản lý form
+  const [saving, setSaving] = useState(false); // Đang lưu hay không
+  const [saveError, setSaveError] = useState(null); // Thông báo lỗi khi lưu
+  const [showForm, setShowForm] = useState(false); // Hiển thị form hay không
+  const [editingId, setEditingId] = useState(null); // ID của danh mục đang chỉnh sửa
+  const [formData, setFormData] = useState({ name: "", description: "" }); // Dữ liệu form
 
-  const [togglingId, setTogglingId] = useState(null);
+  // ⏸️ State kiểm soát trạng thái
+  const [togglingId, setTogglingId] = useState(null); // ID danh mục đang chuyển trạng thái
 
+  // ➕ Hàm mở form để thêm danh mục mới
   const handleAdd = () => {
     setEditingId(null);
     setFormData({ name: "", description: "" });
     setShowForm(true);
   };
 
+  // ✏️ Hàm mở form để chỉnh sửa danh mục
   const handleEdit = (category) => {
     setEditingId(category.id);
     setFormData({ name: category.name, description: category.description });
     setShowForm(true);
   };
 
+  // 💾 Hàm lưu danh mục (thêm mới hoặc cập nhật)
   const handleSave = async () => {
     if (!formData.name) return;
 
@@ -86,6 +99,7 @@ export default function Categories() {
 
     try {
       if (editingId) {
+        // 🔄 Cập nhật danh mục hiện tại
         const category = categories.find((c) => c.id === editingId);
         if (!category) return;
 
@@ -104,12 +118,12 @@ export default function Categories() {
           productsCount: category.productsCount,
         };
 
+        // 🔃 Cập nhật state danh sách
         setCategories(
-          categories.map((c) =>
-            c.id === editingId ? updatedCategory : c
-          )
+          categories.map((c) => (c.id === editingId ? updatedCategory : c))
         );
       } else {
+        // ✨ Tạo danh mục mới
         const response = await axios.post(
           "https://coffee-website-nhom18-admin.onrender.com/api/categories",
           {
@@ -124,6 +138,7 @@ export default function Categories() {
           productsCount: 0,
         };
 
+        // 📌 Thêm vào danh sách
         setCategories([...categories, newCategory]);
       }
       setShowForm(false);
@@ -135,7 +150,7 @@ export default function Categories() {
     }
   };
 
-  // 🔥 CÁCH 1: gửi FULL payload + id
+  // 🔀 Hàm bật/tắt trạng thái danh mục
   const handleToggleStatus = async (id) => {
     const category = categories.find((c) => c.id === id);
     if (!category) return;
@@ -149,29 +164,12 @@ export default function Categories() {
     setTogglingId(id);
 
     try {
-      const payload = {
-        id: category.id, // 🔥 QUAN TRỌNG
-        name: category.name,
-        description: category.description,
-        status: newStatus,
-      };
-
-      console.log("SEND:", payload);
-
-      const response = await axios.put(
-        `https://coffee-website-nhom18-admin.onrender.com/api/categories/${id}`,
-        payload
+      await axios.patch(
+        `https://coffee-website-nhom18-admin.onrender.com/api/categories/${id}/toggle`
       );
 
-      console.log("RESPONSE:", response.data);
-
-      const updatedCategory = {
-        ...response.data,
-        productsCount: category.productsCount,
-      };
-
       setCategories(
-        categories.map((c) => (c.id === id ? updatedCategory : c))
+        categories.map((c) => (c.id === id ? { ...c, status: newStatus } : c))
       );
     } catch (error) {
       console.error("Error updating category status:", error);
@@ -209,6 +207,31 @@ export default function Categories() {
 
       {!loading && !error && (
         <>
+          {/* 🔍 Search Bar */}
+          <div className="mb-6">
+            <input
+              type="text"
+              placeholder="🔍 Tìm kiếm danh mục theo tên..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-4 py-3 border border-orange-300 rounded-lg focus:outline-none focus:border-orange-600 focus:ring-2 focus:ring-orange-100"
+            />
+            {searchTerm && (
+              <p className="text-sm text-gray-600 mt-2">
+                Tìm thấy{" "}
+                {
+                  categories.filter(
+                    (c) =>
+                      c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      c.description
+                        .toLowerCase()
+                        .includes(searchTerm.toLowerCase())
+                  ).length
+                }{" "}
+                / {categories.length} danh mục
+              </p>
+            )}
+          </div>
           {showForm && (
             <div className="bg-white rounded-lg shadow-lg p-6 mb-8 border border-orange-200">
               <h2 className="text-xl font-bold text-orange-800 mb-4">
@@ -288,45 +311,51 @@ export default function Categories() {
               </thead>
               <tbody>
                 {Array.isArray(categories) &&
-                  categories.map((category) => (
-                    <tr key={category.id}>
-                      <td className="px-6 py-4">{category.name}</td>
-                      <td className="px-6 py-4">{category.description}</td>
-                      <td className="px-6 py-4 text-center">
-                        {category.status === 1
-                          ? "Hoạt động"
-                          : "Vô hiệu hóa"}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        {category.productsCount}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <button
-                          onClick={() => handleEdit(category)}
-                          className="bg-orange-500 text-white px-3 py-1 mr-2 rounded"
-                        >
-                          Sửa
-                        </button>
-                        <button
-                          onClick={() =>
-                            handleToggleStatus(category.id)
-                          }
-                          disabled={togglingId === category.id}
-                          className={`px-3 py-1 rounded text-white ${
-                            category.status === 1
-                              ? "bg-red-500"
-                              : "bg-green-500"
-                          }`}
-                        >
-                          {togglingId === category.id
-                            ? "Đang xử lý..."
-                            : category.status === 1
-                            ? "Vô hiệu hóa"
-                            : "Kích hoạt"}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  categories
+                    .filter(
+                      (category) =>
+                        category.name
+                          .toLowerCase()
+                          .includes(searchTerm.toLowerCase()) ||
+                        category.description
+                          .toLowerCase()
+                          .includes(searchTerm.toLowerCase())
+                    )
+                    .map((category) => (
+                      <tr key={category.id}>
+                        <td className="px-6 py-4">{category.name}</td>
+                        <td className="px-6 py-4">{category.description}</td>
+                        <td className="px-6 py-4 text-center">
+                          {category.status === 1 ? "Hoạt động" : "Vô hiệu hóa"}
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          {category.productsCount}
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <button
+                            onClick={() => handleEdit(category)}
+                            className="bg-orange-500 text-white px-3 py-1 mr-2 rounded"
+                          >
+                            Sửa
+                          </button>
+                          <button
+                            onClick={() => handleToggleStatus(category.id)}
+                            disabled={togglingId === category.id}
+                            className={`px-3 py-1 rounded text-white ${
+                              category.status === 1
+                                ? "bg-red-500"
+                                : "bg-green-500"
+                            }`}
+                          >
+                            {togglingId === category.id
+                              ? "Đang xử lý..."
+                              : category.status === 1
+                              ? "Vô hiệu hóa"
+                              : "Kích hoạt"}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
               </tbody>
             </table>
           </div>

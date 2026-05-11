@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
+// 🎨 Hàm định dạng màu sắc dựa trên trạng thái đơn hàng
 const getStatusColor = (status) => {
   const statusLower = status?.toLowerCase() || "";
   if (["đã giao", "delivered"].includes(statusLower))
@@ -15,16 +16,20 @@ const getStatusColor = (status) => {
 };
 
 export default function Dashboard() {
+  // 📊 State lưu trữ thống kê
   const [stats, setStats] = useState({
-    totalOrders: 0,
-    totalProducts: 0,
-    totalCategories: 0,
-    totalUsers: 0,
+    totalOrders: 0, // Tổng số đơn hàng
+    totalProducts: 0, // Tổng số sản phẩm
+    totalCategories: 0, // Tổng số danh mục
+    totalUsers: 0, // Tổng số người dùng
   });
 
+  // 📋 State lưu danh sách đơn hàng gần đây
   const [recentOrders, setRecentOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+
+  // ⏳ State kiểm soát trạng thái tải dữ liệu
+  const [loading, setLoading] = useState(true); // Đang tải hay không
+  const [error, setError] = useState(null); // Thông báo lỗi nếu có
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -32,7 +37,7 @@ export default function Dashboard() {
         setLoading(true);
         setError(null);
 
-        // Fetch orders
+        // 📦 Lấy danh sách đơn hàng từ API
         const ordersResponse = await axios.get(
           "https://coffee-website-nhom18-admin.onrender.com/api/admin/orders"
         );
@@ -44,7 +49,7 @@ export default function Dashboard() {
           ? ordersResponse.data.content
           : [];
 
-        // Fetch products with pagination to get total count
+        // ☕ Lấy danh sách sản phẩm từ API (với phân trang)
         const productsResponse = await axios.get(
           "https://coffee-website-nhom18-admin.onrender.com/api/products?page=0&size=10"
         );
@@ -62,7 +67,7 @@ export default function Dashboard() {
             ? productsData.products.length
             : 0);
 
-        // Fetch categories
+        // 📁 Lấy danh sách danh mục từ API
         const categoriesResponse = await axios.get(
           "https://coffee-website-nhom18-admin.onrender.com/api/categories"
         );
@@ -76,7 +81,7 @@ export default function Dashboard() {
             : []
           : [];
 
-        // Fetch users
+        // 👥 Lấy danh sách người dùng từ API
         const usersResponse = await axios.get(
           "https://coffee-website-nhom18-admin.onrender.com/users"
         );
@@ -88,7 +93,7 @@ export default function Dashboard() {
           ? usersResponse.data.content
           : [];
 
-        // Update stats
+        // 📊 Cập nhật state với thống kê
         setStats({
           totalOrders: orders.length,
           totalProducts: totalProducts,
@@ -96,7 +101,7 @@ export default function Dashboard() {
           totalUsers: users.length,
         });
 
-        // Format and set recent orders (last 5)
+        // 🆕 Định dạng và lưu 5 đơn hàng gần đây
         const formattedOrders = orders.slice(0, 5).map((order) => ({
           id: order.id || order._id || order.orderId || "-",
           customer:
@@ -122,6 +127,7 @@ export default function Dashboard() {
     fetchDashboardData();
   }, []);
 
+  // 🎯 Thành phần hiển thị thẻ thống kê (tiêu đề, giá trị, icon, màu)
   const StatCard = ({ title, value, icon, color }) => (
     <div
       className={`bg-white rounded-lg shadow-lg p-4 sm:p-6 border-l-4 ${color} hover:shadow-xl transition-shadow`}
@@ -140,6 +146,7 @@ export default function Dashboard() {
     </div>
   );
 
+  // ❌ Nếu có lỗi, hiển thị thông báo lỗi
   if (error) {
     return (
       <div className="p-8 text-center">

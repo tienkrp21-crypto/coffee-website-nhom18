@@ -13,7 +13,8 @@ import { useCart } from "../context/CartContext";
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 
-const BASE_URL = "https://coffee-website-nhom18-1.onrender.com";
+//const BASE_URL = "https://coffee-website-nhom18-1.onrender.com";
+const BASE_URL = "http://localhost:8080";
 
 const MainLayout = () => {
   const { cartCount } = useCart() || { cartCount: 0 };
@@ -69,23 +70,10 @@ const MainLayout = () => {
   };
 
   //LOGIC ĐĂNG KÝ
+  
   const handleRegister = async (e) => {
     e.preventDefault();
-    // 1. RÀNG BUỘC REGEX CHO MODAL
-    const nameRegex = /^[a-zA-ZÀ-ỹ\s]{3,}$/; // Tên ít nhất 3 chữ cái
-    const phoneRegex = /^0\d{9}$/; // SĐT phải bắt đầu bằng 0 và đủ 10 số
-    const passRegex = /^(?=.*[A-Z]).{8,}$/; // Pass >= 8 ký tự, có chữ IN HOA
-
-    if (!nameRegex.test(fullName.trim())) {
-      return alert("Vui lòng nhập đúng Họ và tên (chỉ bao gồm chữ cái và khoảng trắng)!");
-    }
-    if (!phoneRegex.test(regPhone)) {
-      return alert("Số điện thoại không hợp lệ! Phải bắt đầu bằng số 0 và gồm đúng 10 chữ số.");
-    }
-    if (!passRegex.test(regPassword)) {
-      return alert("Mật khẩu quá yếu! Cần ít nhất 8 ký tự và phải chứa ít nhất 1 chữ cái IN HOA.");
-    }
-
+    
     setLoadingReg(true);
     try {
       const response = await fetch(`${BASE_URL}/users/register`, {
@@ -489,3 +477,16 @@ const MainLayout = () => {
 };
 
 export default MainLayout;
+    // const nameRegex = /^[a-zA-ZÀ-ỹ\s]{3,}$/; // Tên ít nhất 3 chữ cái
+    // const phoneRegex = /^0\d{9}$/; // SĐT phải bắt đầu bằng 0 và đủ 10 số
+    // const passRegex = /^(?=.*[A-Z]).{8,}$/; // Pass >= 8 ký tự, có chữ IN HOA
+
+    // if (!nameRegex.test(fullName.trim())) {
+    //   return alert("Vui lòng nhập đúng Họ và tên (chỉ bao gồm chữ cái và khoảng trắng)!");
+    // }
+    // if (!phoneRegex.test(regPhone)) {
+    //   return alert("Số điện thoại không hợp lệ! Phải bắt đầu bằng số 0 và gồm đúng 10 chữ số.");
+    // }
+    // if (!passRegex.test(regPassword)) {
+    //   return alert("Mật khẩu quá yếu! Cần ít nhất 8 ký tự và phải chứa ít nhất 1 chữ cái IN HOA.");
+    // }

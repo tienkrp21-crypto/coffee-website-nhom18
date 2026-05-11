@@ -1,20 +1,33 @@
+/**
+ * ========================================
+ * TRANG ĐĂNG NHẬP ADMIN (AdminLogin.jsx)
+ * ========================================
+ *
+ * Chức năng: Cung cấp giao diện đăng nhập cho quản trị viên
+ * - Nhập tên đăng nhập và mật khẩu
+ * - Xác thực thông tin đăng nhập
+ * - Điều hướng tới dashboard nếu đăng nhập thành công
+ * - Hiển thị thông báo lỗi nếu thông tin không đúng
+ */
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAdmin } from "../context/AdminContext";
 
 export default function AdminLogin() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const navigate = useNavigate();
-  const { login, isLoggedIn } = useAdmin();
+  // State quản lý thông tin đăng nhập
+  const [username, setUsername] = useState(""); // Tên đăng nhập
+  const [password, setPassword] = useState(""); // Mật khẩu
+  const [error, setError] = useState(""); // Thông báo lỗi
+  const navigate = useNavigate(); // Điều hướng trang
+  const { login, isLoggedIn } = useAdmin(); // Hàm đăng nhập từ context
 
+  // 🔄 Kiểm tra trạng thái đăng nhập - Nếu đã đăng nhập, chuyển hướng tới dashboard
   useEffect(() => {
     if (isLoggedIn) {
       navigate("/admin/dashboard");
     }
   }, [isLoggedIn, navigate]);
-
   const handleLogin = (e) => {
     e.preventDefault();
     setError("");
@@ -36,7 +49,9 @@ export default function AdminLogin() {
       <div className="bg-white rounded-lg shadow-2xl w-full max-w-md p-8 border border-orange-200">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-orange-800 mb-2">☕</h1>
-          <h2 className="text-2xl font-bold text-orange-800">Đăng nhập Admin</h2>
+          <h2 className="text-2xl font-bold text-orange-800">
+            Đăng nhập Admin
+          </h2>
           <p className="text-orange-600 mt-2">Quản lý hệ thống Coffee Shop</p>
         </div>
 

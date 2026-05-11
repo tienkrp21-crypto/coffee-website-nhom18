@@ -1,14 +1,27 @@
+/**
+ * ========================================
+ * TRANG QUẢN LÝ ĐƠN HÀNG (Orders.jsx)
+ * ========================================
+ *
+ * Chức năng: Quản lý đơn hàng của khách hàng
+ * - Hiển thị danh sách đơn hàng
+ * - Tìm kiếm đơn hàng
+ * - Xem chi tiết đơn hàng
+ * - Cập nhật trạng thái đơn hàng
+ * - Hiển thị thông tin khách hàng
+ * - Hiển thị danh sách sản phẩm trong đơn hàng
+ */
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 const API_BASE =
   "https://coffee-website-nhom18-admin.onrender.com/api/admin/orders";
 
-// 🟢 THÊM: API USER
-const USER_API =
-  "https://coffee-website-nhom18-admin.onrender.com/users";
+// 🟢 API cho người dùng
+const USER_API = "https://coffee-website-nhom18-admin.onrender.com/users";
 
-// 🟢 THÊM: map status backend -> UI
+// 📍 Hàm chuyển đổi trạng thái từ tiếng Anh sang tiếng Việt
 const mapStatus = (status) => {
   switch (status) {
     case "PENDING":
@@ -24,6 +37,7 @@ const mapStatus = (status) => {
   }
 };
 
+// 🎨 Hàm định dạng màu sắc trạng thái đơn hàng
 const getStatusColor = (status) => {
   switch (status) {
     case "Đã giao":
@@ -44,54 +58,101 @@ const getStatusColor = (status) => {
   }
 };
 
+// 🔄 Hàm chuẩn hóa dữ liệu đơn hàng từ API
 const normalizeOrder = (order) => ({
   id: order.id?.toString() || "-",
   customer:
     order.customerName || order.customer?.name || order.user?.name || "-",
 
-  // 🟢 email sẽ load sau
+  // 📧 Email sẽ tải sau
   email: "-",
 
+  // 📞 Số điện thoại
   phone: order.receiverPhone || order.customer?.phone || "-",
 
+  // 📅 Ngày tạo đơn hàng
   date: order.createdAt
     ? new Date(order.createdAt).toLocaleDateString("vi-VN")
     : "-",
 
+  // 💰 Tổng tiền
   amount: Number(order.totalAmount ?? order.amount ?? 0),
 
-  items:
-    Array.isArray(order.orderDetails)
-      ? order.orderDetails.length
-      : order.quantity ?? 0,
+  // 📦 Số lượng sản phẩm
+  items: Array.isArray(order.orderDetails)
+    ? order.orderDetails.length
+    : order.quantity ?? 0,
 
-  // 🟢 map status
+  // 📍 Trạng thái đơn hàng
   status: mapStatus(order.orderStatus || order.status),
 
+  // 💳 Phương thức thanh toán
   paymentMethod: order.paymentMethod || "-",
+
+  // 🏠 Địa chỉ giao hàng
   address:
     order.shippingAddress || order.deliveryAddress || order.address || "-",
 
-  // 🟢 QUAN TRỌNG
-  itemsDetail: Array.isArray(order.orderDetails)
-    ? order.orderDetails
-    : [],
+  // 📋 Chi tiết các sản phẩm trong đơn hàng
+  itemsDetail: Array.isArray(order.orderDetails) ? order.orderDetails : [],
 
-  // 🟢 thêm userId
+  // 👤 ID người dùng
   userId: order.userId,
 
+  // 🔧 Dữ liệu nguyên gốc từ API
   raw: order,
 });
 
 export default function Orders() {
+  // 📊 State quản lý danh sách đơn hàng
   const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedOrder, setSelectedOrder] = useState(null);
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [detailError, setDetailError] = useState(null);
+  const [loading, setLoading] = useState(true); // Đang tải hay không
+  const [error, setError] = useState(null); // Thông báo lỗi
 
+  // 🔍 State quản lý tìm kiếm
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // 🔎 State quản lý chi tiết đơn hàng
+  const [selectedOrder, setSelectedOrder] = useState(null); // Đơn hàng được chọn
+  const [detailLoading, setDetailLoading] = useState(false); // Đang tải chi tiết
+  const [detailError, setDetailError] = useState(null); // Lỗi tải chi tiết
+
+  // ⚙️ State quản lý cập nhật trạng thái
+  const [updatingStatus, setUpdatingStatus] = useState(false); // Đang cập nhật trạng thái
+  const [newStatus, setNewStatus] = useState(""); // Trạng thái mới
+
+  // 🔀 Hàm cập nhật trạng thái đơn hàng
+  const updateOrderStatus = async (orderId, status) => {
+    if (!status) return;
+
+    setUpdatingStatus(true);
+    try {
+      const response = await axios.patch(
+        `https://coffee-website-nhom18-admin.onrender.com/api/admin/orders/${orderId}/status`,
+        null,
+        { params: { status } }
+      );
+
+      // Cập nhật state local
+      const updatedOrder = normalizeOrder(response.data);
+      setOrders(
+        orders.map((order) => (order.id === orderId ? updatedOrder : order))
+      );
+
+      if (selectedOrder && selectedOrder.id === orderId) {
+        setSelectedOrder(updatedOrder);
+      }
+
+      alert("Cập nhật trạng thái đơn hàng thành công!");
+    } catch (error) {
+      console.error("Error updating order status:", error);
+      alert("Không thể cập nhật trạng thái đơn hàng. Vui lòng thử lại.");
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
+  // 📥 Tải danh sách đơn hàng khi component render
   useEffect(() => {
     const fetchOrders = async () => {
       setLoading(true);
@@ -118,11 +179,12 @@ export default function Orders() {
     fetchOrders();
   }, []);
 
-  // 🔥 SỬA: fetch detail + user
+  // 📋 Hàm tải chi tiết đơn hàng (bao gồm thông tin khách hàng)
   const fetchOrderDetail = async (orderId, userId) => {
     setSelectedOrder(null);
     setDetailError(null);
     setDetailLoading(true);
+    setNewStatus(""); // Reset trạng thái mới
     try {
       const [orderRes, userRes] = await Promise.all([
         axios.get(`${API_BASE}/${orderId}`),
@@ -233,9 +295,7 @@ export default function Orders() {
                       <tr
                         key={order.id}
                         className={`border-t border-gray-100 hover:bg-gray-50 ${
-                          selectedOrder?.id === order.id
-                            ? "bg-orange-50"
-                            : ""
+                          selectedOrder?.id === order.id ? "bg-orange-50" : ""
                         }`}
                       >
                         <td className="px-6 py-4 font-semibold text-orange-600">
@@ -343,6 +403,34 @@ export default function Orders() {
                 >
                   {selectedOrder.status}
                 </p>
+              </div>
+
+              {/* 🔥 THÊM: Cập nhật trạng thái */}
+              <div>
+                <p className="text-sm text-gray-500">Cập nhật trạng thái</p>
+                <div className="mt-2 flex gap-2">
+                  <select
+                    value={newStatus}
+                    onChange={(e) => setNewStatus(e.target.value)}
+                    className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none"
+                    disabled={updatingStatus}
+                  >
+                    <option value="">Chọn trạng thái mới</option>
+                    <option value="PENDING">Chờ xử lý</option>
+                    <option value="SHIPPING">Đang giao</option>
+                    <option value="DELIVERED">Đã giao</option>
+                    <option value="CANCELLED">Đã hủy</option>
+                  </select>
+                  <button
+                    onClick={() =>
+                      updateOrderStatus(selectedOrder.id, newStatus)
+                    }
+                    disabled={updatingStatus || !newStatus}
+                    className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-700 disabled:opacity-50"
+                  >
+                    {updatingStatus ? "Đang cập nhật..." : "Cập nhật"}
+                  </button>
+                </div>
               </div>
 
               {/* 🔥 HIỂN THỊ CHI TIẾT SẢN PHẨM */}
